@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kathi Rolls - Order</title>
+    <link rel="stylesheet" href="styles2.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="bg-blur"></div>
+    <header class="fixed-top border-bottom shadow-sm" style="background-color: rgba(255, 255, 255, 0.7) !important;">
+        <div class="container-fluid d-flex align-items-center justify-content-between py-2 px-4">
+            <a href="../home.html">
+                <img src="../Resources/Logo.jpg" alt="Home" id="logoimg" class="img-fluid" style="width: 50px;">
+            </a>
+            <a href="Profile.html">
+                <img src="../Resources/user.png" alt="User Profile" id="usr" class="img-fluid rounded-circle" style="width: 40px;">
+            </a>
+        </div>
+    </header>
+
+    <main class="container mt-5 pt-5">
+        <section class="cart-container">
+            <div class="foods w-100">
+                <div class="items-section">
+                    <div id="food-list" class="mb-5">
+                        <!-- Header Row -->
+                        <div class="row header-row gx-0 mb-3 py-2 bg-light rounded-top">
+                            <div class="col-6 text-start ps-4 fw-bold">Item</div>
+                            <div class="col-3 fw-bold">Price</div>
+                            <div class="col-3 fw-bold">Quantity</div>
+                        </div>
+
+                        <!-- Food Items -->
+                        <div class="food-items-container">
+                            <!-- Kathi Rolls -->
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Classic Chicken Kathi Roll</div>
+                                <div class="col-3">₹99</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-lg btn-outline-secondary minus-btn" aria-label="Reduce quantity">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-lg btn-primary plus-btn" aria-label="Increase quantity">+</button>
+                                </div>
+                            </div>
+
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Paneer Tikka Kathi Roll</div>
+                                <div class="col-3">₹109</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Sides -->
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">French Fries</div>
+                                <div class="col-3">₹65</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Beverages -->
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Masala Chai</div>
+                                <div class="col-3">₹45</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Classic Chicken Kathi Roll</div>
+                                <div class="col-3">₹99</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-lg btn-outline-secondary minus-btn" aria-label="Reduce quantity">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-lg btn-primary plus-btn" aria-label="Increase quantity">+</button>
+                                </div>
+                            </div>
+
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Paneer Tikka Kathi Roll</div>
+                                <div class="col-3">₹109</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Sides -->
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">French Fries</div>
+                                <div class="col-3">₹65</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+
+                            <!-- Beverages -->
+                            <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+                                <div class="col-6 text-start ps-4">Masala Chai</div>
+                                <div class="col-3">₹45</div>
+                                <div class="col-3 d-flex justify-content-center align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary minus-btn">-</button>
+                                    <span class="mx-3 quantity">0</span>
+                                    <button class="btn btn-sm btn-primary plus-btn">+</button>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="sticky-submit">
+                        <button type="button" class="btn btn-primary btn-lg shadow-lg" id="submitCart">
+                            SUBMIT ORDER (₹<span id="totalAmount">0</span>)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let total = 0;
+            const submitBtn = document.getElementById('submitCart');
+            const totalDisplay = document.getElementById('totalAmount');
+
+            document.querySelectorAll('.food-item').forEach(item => {
+                const minusBtn = item.querySelector('.minus-btn');
+                const plusBtn = item.querySelector('.plus-btn');
+                const quantitySpan = item.querySelector('.quantity');
+                const price = parseFloat(item.children[1].textContent.replace('₹', ''));
+                
+                const updateTotal = (change) => {
+                    total += change;
+                    totalDisplay.textContent = total.toFixed(2);
+                    submitBtn.disabled = total <= 0;
+                };
+
+                plusBtn.addEventListener('click', () => {
+                    const current = parseInt(quantitySpan.textContent);
+                    quantitySpan.textContent = current + 1;
+                    updateTotal(price);
+                });
+
+                minusBtn.addEventListener('click', () => {
+                    const current = parseInt(quantitySpan.textContent);
+                    if (current > 0) {
+                        quantitySpan.textContent = current - 1;
+                        updateTotal(-price);
+                    }
+                });
+            });
+
+            submitBtn.addEventListener('click', function() {
+                const cart = [];
+                document.querySelectorAll('.food-item').forEach(item => {
+                    const quantity = parseInt(item.querySelector('.quantity').textContent);
+                    if (quantity > 0) {
+                        cart.push({
+                            name: item.children[0].textContent.trim(),
+                            price: parseFloat(item.children[1].textContent.replace('₹', '')),
+                            quantity: quantity
+                        });
+                    }
+                });
+                
+                localStorage.setItem('cart', JSON.stringify(cart));
+                window.location.href = 'cart.html';
+            });
+        });
+    </script>
+</body>
+</html>
