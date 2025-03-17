@@ -1,0 +1,30 @@
+
+<%- include('partials/headere')  %>
+<%- include('partials/mainnave')  %>
+
+    <main class="container mt-5 pt-5">
+        <section class="cart-container" style="max-width: 800px; margin: 0 auto;">
+            <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Your Cart</h2>
+            <div class="bg-light rounded p-4 shadow-sm">
+                <div id="cartItems" class="mb-4 " style="display: block;">
+                    <!-- Cart items will be loaded here -->
+                    <% let total=0; %>
+                    <% for(items of cart){ %>
+                        <div class="row text-center py-2 border-bottom">
+                            <% total+=items.price*items.quantity %>
+                            <div class="col-md-6"><%=items.name%></div>
+                            <div class="col-md-3">₹<%=items.price%></div>
+                            <div class="col-md-3"><%= items.quantity %></div>
+                        </div>
+                        <% } %>
+                </div>
+                <h3 class="text-center mt-4 p-3 bg-white rounded shadow-sm" id="totalAmount">
+                    Total: ₹ <%= total %>
+                </h3>
+            </div>
+        </section>
+    </main>
+
+    <script src="/scripts/script.js"></script>
+</body>
+</html>

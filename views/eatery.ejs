@@ -1,0 +1,27 @@
+<%- include('partials/headere.ejs') %>
+<%- include('partials/mainnave')  %>
+<%- include('partials/nave.ejs') %>
+
+                        
+<% for(item of items) {%>
+<div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
+    <div class="col-6 text-start ps-4"><%= item.name %></div>
+    <div class="col-3"><%= item.price %></div>
+    <div class="col-3 d-flex justify-content-center align-items-center">
+        <button class="btn btn-lg btn-outline-secondary minus-btn" aria-label="Reduce quantity">-</button>
+        <span class="mx-3 quantity">0</span>
+        <button class="btn btn-lg btn-primary plus-btn" aria-label="Increase quantity">+</button>
+    </div>
+</div>
+<% } %>
+
+
+
+
+
+<%- include('partials/eateryfooter.ejs')  %>
+
+                        
+
+
+<%- include('partials/footer.ejs') %>

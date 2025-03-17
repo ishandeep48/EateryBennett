@@ -1,0 +1,396 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f8f8;
+}
+
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.507);
+    padding: 5px 10px;
+    color: white;
+}
+
+.logo img {
+    width: 50px;
+    height: auto;
+}
+
+.user img {
+    width: 40px;
+    height: auto;
+    border-radius: 50%;
+    padding: 5px;
+    background-color: white;
+}
+
+
+main {
+    margin: 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 80vh;
+
+}
+
+
+section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+
+.foods{
+    display: flex;
+    justify-content: space-around;
+}
+.cart-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+    margin: 10px auto;
+    width: 80%;
+    height: 90%;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.items-section  {
+    width: 65%;
+    text-align: left;
+}
+.cart-section{
+    width: 25%;
+    text-align: center;
+}
+
+.cart-section ol {
+    padding-left: 20px;
+}
+
+.total-checkout {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    
+}
+
+.total-btn, .checkout-btn {
+    padding: 10px;
+    width: 100px;
+    background: #ccc;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.checkout-btn {
+    background: #000;
+    color: white;
+    transition: all 0.3s;
+    width: 100%;
+    margin:5px;
+}
+
+.checkout-btn:hover {
+    background: darkgray;
+}
+
+.items-section{
+    
+    justify-content: space-evenly;
+    display: flex;
+    align-self: flex-start;
+    
+    padding: 10px 0;
+}
+#total{
+    width: 100%;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 10%;
+    margin: 5px;
+} 
+.food-item {
+
+    padding: 15px 0;
+    margin: 5px 0;
+}
+.food-item > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+}
+
+#submitCart{
+    width:100%;
+    margin-top: 20px;
+}
+
+.eatery-img{
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+}
+.eatery-name{
+    display: inline;
+}
+
+#mainpage{
+   
+    background: none;
+}
+
+.bg-blur {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/images/Food1.jpg'); 
+    background-size: cover;
+    background-position: center;
+    filter: blur(10px); 
+    z-index: -1;
+    transform: scale(1.1); /* Scale up to prevent vignette */
+}
+
+
+/* ------------------------- ( HOVER EFFECT FOR ALL THE BUTTONS ON MAIN PAGE) ------------------------------------------------------ */
+
+
+.eatery {
+
+    margin: 13%;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(224, 224, 224, 0.473);
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    width: 100%;
+    height:12em;
+    align-items: center;
+    justify-content: start;
+    text-transform: uppercase;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+
+    
+}
+
+.eatery:hover {
+   
+    transform: scale(1.2);
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.411);
+    color: white;
+    
+}
+.eatery-link{
+    text-decoration: none;
+    display: flex;
+    width: 30%;
+    justify-content: center; 
+    align-items: center;
+}
+
+.eatery::before{
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transform: translate(0%,90%);
+    z-index: 99;
+    position: relative;
+    transform-origin: bottom;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    
+    opacity: 0;
+    transform: scaleY(0); /* Start below */
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.320, 1), opacity 0.2s ease-in-out;
+ 
+}
+
+.eatery::after{
+    
+    transform-origin: top;
+    transform: translate(0%,-100%);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+    
+}
+
+.eatery:hover::before {
+    /* transform: translate(0%,0%); */
+    transform: scaleY(1.1);
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+   
+
+}
+  
+.eatery:hover::after {
+    transform: translate(0%,-200%);
+}
+  
+.eatery:focus {
+    outline: none;
+}
+  
+.eatery:active {
+    scale: 0.95;
+}
+  /* ------------------------------------------------------ Just naming everything ----------------------------------------------- */
+#kathi{
+    background: url('/images/KathiRoll.jpg') no-repeat center center/cover;
+}
+#kathi::before{
+    text-decoration: none;
+    content: "KATHI";
+    
+}
+
+#chai{
+    background: url('/images/chai.jpg') no-repeat center center/cover;
+}
+#chai::before{
+    text-decoration: none;
+    content: "Chai OK";
+    
+}
+
+#hots{
+    background: url('/images/Maggi.jpg') no-repeat center center/cover;
+}
+#hots::before{
+    text-decoration: none;
+    content: "HotSpot";
+    
+}
+
+#quench{
+    background: url('/images/wrap1.jpg') no-repeat center center/cover;
+}
+#quench::before{
+    text-decoration: none;
+    content: "Quench";
+    
+}
+
+#snape{
+    background: url('/images/Burger.jpg') no-repeat center center/cover;
+}
+#snape::before{
+    text-decoration: none;
+    content: "SnapEats";
+    
+}
+
+#south{
+    background: url('/images/Dosa.jpg') no-repeat center center/cover;
+}
+#south::before{
+    text-decoration: none;
+    content: "Southern Stories";
+    
+}
+
+
+/* --------------------------------------------------------- Naming ended ----------------------------------------------------------------- */
+
+
+
+/* -----------------------------------------------------------Responsive --------------------------------------------------------------------------------- */
+
+@media only screen and (max-width: 1200px) {
+    .eatery-link {
+        width: 45%;
+        margin: 5% 2.5%;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    .eatery-link {
+        width: 100%;
+        margin: 2% 0;
+    }
+    
+    header .container-fluid {
+        padding: 10px 20px;
+    }
+    main {
+        margin: 10%;
+    }
+    #kathi{
+        margin-top: 1800px;
+        
+        display: block;
+    }
+}
+
+@media only screen and (max-width: 426px) and (min-width: 375px) {
+    header .container-fluid {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px 20px;
+    }
+    header #logoimg,
+    header #usr {
+        width: 40px;
+        height: 40px;
+    }
+    .eatery-link {
+        width: 90%;
+        margin: 10% 5%;
+    }
+    .eatery {
+        margin: 15% 0;
+    }
+    main {
+        margin: 10%;
+    }
+}
+
+@media only screen and (max-width: 320px) {
+    header .container-fluid {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 10px;
+    }
+    header #logoimg,
+    header #usr {
+        width: 30px;
+        height: 30px;
+    }
+    .eatery-link {
+        width: 90%;
+        margin: 5% auto;
+    }
+    .eatery {
+        margin: 5% 0;
+    }
+    main {
+        margin: 5%;
+    }
+}
+
+
+/* ---------------------------------------------------------------------------END RESPONSIVE ------------------------------------------------------------ */
