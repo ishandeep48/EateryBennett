@@ -30,15 +30,12 @@ mongoose.connect('mongodb://127.0.0.1:27017/Eatery')
 });
 
 const userSchema = new mongoose.Schema({
+
     username: {
         type: String,
         required: true,
         unique: true
     },
-    // password: {
-    //     type: String,
-    //     required: true
-    // },
     email: {
         type: String,
         required: true,
@@ -47,14 +44,26 @@ const userSchema = new mongoose.Schema({
     cart: { 
         type: Array,
          default: [] 
+    },
+    usertype:{
+        type: String,
+        enum:['user','employee','admin'],
+        default:'user'
+    },
+    EmpOf:{
+        type: String,
+        default:'none'
+    },
+    PrevOrder:{
+        type: Array,
+        default:[]
     }
 });
 
 userSchema.plugin(passportLocalMongoose);
 const User = mongoose.model('User',userSchema);
 passport.use(new passportLocal(User.authenticate()));
-// app.use(new passportLocal(User.authenticate()));
-// passport.use(User.createStrategy());
+
 
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
@@ -65,6 +74,40 @@ const isLoggedIn =(req,res,next) =>{
     }
     next();
 }
+//middleware to check that the person that is accessing the site is employee
+
+const isEmployee =async(req,res,next)=>{
+    if(!req.user){
+        return res.redirect('/login');
+    }
+
+    const {username}=req.user;
+    const userdata= await User.findOne({username});
+    const utype=userdata.usertype;
+    if(utype=='employee'){
+        return next();
+    }else{
+        return res.redirect('/');
+    }
+}
+//middleware to check that the person that is accessing the site is user
+const isUser =async(req,res,next)=>{
+    if(!req.user){
+        return res.redirect('/login');
+    }
+
+    const {username}=req.user;
+    // console.log(`The username is ${username}`);//debugging
+    const userdata= await User.findOne({username});
+    const utype=userdata.usertype;
+
+    if(utype=='user'){
+        return next();
+    }else{
+        const temp=userdata.EmpOf;
+        return res.redirect(`/eatery/${temp}`);
+    }
+}
 // function to shopw the page when register is opened
 app.get('/register',(req,res)=>{
     if(req.isAuthenticated()){
@@ -74,7 +117,6 @@ app.get('/register',(req,res)=>{
 })
 // the function that will crate user and redirect to main page
 app.post('/register', async (req,res) =>{
-    // console.log(req.body);
     let {username , password , email }= req.body;
     console.log(username, email,password);
     const usr= new User({
@@ -105,6 +147,9 @@ app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}) , a
     res.redirect('/');
 })
 
+app.get('/eatery/:outlet',isLoggedIn,isEmployee,async(req,res)=>{
+    res.send(`This eatery is, ${req.params.outlet} hehe`);
+})
 // schema for food items
 const foodSchema = new mongoose.Schema({
     name: {
@@ -125,15 +170,9 @@ const foodSchema = new mongoose.Schema({
         required: true
     },
 });
-// model fopr the aboce schema
+// model fopr the above schema
 const Food = mongoose.model('Fooditem',foodSchema);
-
-let cartData ={}; // TODO: Fix this shit
-
-// app.get('/register',(req,res)=>{
-//     res.render('auth');
-// })
-
+//function to logout
 app.get('/logout',isLoggedIn,(req,res,next)=>{
     req.logout(function(err){
         if(err){
@@ -142,13 +181,14 @@ app.get('/logout',isLoggedIn,(req,res,next)=>{
         res.redirect('/');
     });
 })
-app.get('/',isLoggedIn,(req,res)=>{
+//the homepage for users
+app.get('/',isLoggedIn,isUser,(req,res)=>{
     res.render('home')
 })
 
 
 // POST route to update user's cart in database
-app.post('/cart', isLoggedIn, async (req, res) => {
+app.post('/cart', isLoggedIn,isUser, async (req, res) => {
     try {
         const user = req.user; 
         user.cart = req.body.cart; 
@@ -162,11 +202,11 @@ app.post('/cart', isLoggedIn, async (req, res) => {
 });
 
 // GET route to retrieve user's cart
-app.get('/cart', isLoggedIn, async (req, res) => {
+app.get('/cart', isLoggedIn,isUser, async (req, res) => {
     res.render('cart', { cart: req.user.cart || [] }); 
     console.log(req.user);
 });
-
+//profile page ( right now i am thinking to keep this for both employee and students)
 app.get('/profile',isLoggedIn,(req,res)=>{
     const data={
         username : req.user.username
@@ -174,22 +214,22 @@ app.get('/profile',isLoggedIn,(req,res)=>{
     console.log(data);
     res.render('profile',data);
 })
-
-app.get('/:eatery',isLoggedIn,async(req,res)=>{
+// page for food items of each eatery
+app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     let eatery=req.params.eatery.toLowerCase();
     const items = await Food.find({outlet : eatery});
-    // console.log(items);
     if(items.length==0){
         return res.render('e404');
     }else{
+        
         res.render('eatery',{items});
     }
 })
-
+// e404 ofcourse 
 app.get('*',(req,res)=>{
     res.render('e404');
 })
-
+// let the server start my lord
 app.listen(3000, '0.0.0.0',()=>{
     console.log("Listening on port 3000!");
 })
