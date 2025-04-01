@@ -1,0 +1,62 @@
+<%- include('partials/headere') %>
+<%- include('partials/mainnave') %>
+
+<div class="main-container">
+    <div class="closed-message">
+        <h1>Sorry!</h1>
+        <p>This eatery is currently closed.</p>
+        <p>Please check back later.</p>
+    </div>
+</div>
+
+<style>
+    body {
+        overflow-y: auto !important;
+        min-height: 100vh;
+    }
+
+    .main-container {
+        padding: 100px 20px 20px;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .closed-message {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .closed-message h1 {
+        color: #dc3545;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+
+    .closed-message p {
+        color: #666;
+        font-size: 1.2rem;
+        margin: 10px 0;
+    }
+
+    @media (max-width: 768px) {
+        .closed-message {
+            padding: 30px;
+            width: 95%;
+        }
+
+        .closed-message h1 {
+            font-size: 2rem;
+        }
+
+        .closed-message p {
+            font-size: 1.1rem;
+        }
+    }
+</style>

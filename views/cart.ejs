@@ -8,6 +8,12 @@
             <div class="bg-light rounded p-4 shadow-sm">
                 <div id="cartItems" class="mb-4 " style="display: block;">
                     <!-- Cart items will be loaded here -->
+                    <div class="row text-center py-2 border-bottom">
+                        <% //total+=items.price*items.quantity %>
+                        <div class="col-md-6">Item</div>
+                        <div class="col-md-3">Price</div>
+                        <div class="col-md-3">Quantity</div>
+                    </div>
                     <% let total=0; %>
                     <% for(items of cart){ %>
                         <div class="row text-center py-2 border-bottom">
@@ -21,6 +27,17 @@
                 <h3 class="text-center mt-4 p-3 bg-white rounded shadow-sm" id="totalAmount">
                     Total: ₹ <%= total %>
                 </h3>
+                <% if(total>0){ %>
+                <div class="text-center p-3 bg-white rounded shadow-sm">
+                   
+                    <form action="/checkout" method="POST">
+                        <input type="hidden" name="totalAmount" value="<%= total %>">
+                        <button class="btn btn-primary" id="checkout-btn">
+                            PAY ₹<%= total  %>
+                        </button>
+                    </form>
+                    <% } %>
+                </div>  
             </div>
         </section>
     </main>

@@ -6,7 +6,35 @@ const passportLocalMongoose = require('passport-local-mongoose');
 const passport = require('passport');
 const passportLocal = require('passport-local');
 const session = require('express-session');
+const qrcode=require('qrcode');
+const methodOverride = require('method-override');
+const { customAlphabet } = require('nanoid');
+const nodemailer = require('nodemailer');
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'EATERY-EMAIL-ADDRESS', // the email of the eatery
+        pass: 'EATERY-EMAIL-PASSWORD' // the app-password of the eatery
+    }
+});
+async function sendOTP(email,otp){
+    const mailOptions={
+        from:'EATERY-EMAIL-ADDRESS',
+        to:email,
+        subject:'One Time Password for Registration on Bennett Eatery',
+        text:`Your One Time Password for registration on Bennett Eatery is ${otp} . Please do not share this with anyone. `
+    }   
+    try{
+        await transporter.sendMail(mailOptions);
+        console.log(`OTP sent successfully to ${email}`);
+    }catch(error){
+        console.error('Error sending OTP:',error);
+    }
+}
+const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 10);
+
+app.use(methodOverride('_method'));
 app.use(express.urlencoded({extended:true}));
 app.use(session({
     secret: 'secret',
@@ -42,8 +70,11 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
     cart: { 
-        type: Array,
-         default: [] 
+        eatery:String,
+        items:{
+            type:Array,
+            default:[]
+        } 
     },
     usertype:{
         type: String,
@@ -59,7 +90,48 @@ const userSchema = new mongoose.Schema({
         default:[]
     }
 });
+const eaterySchema = new mongoose.Schema({
+    Name:{
+        type: String,
+        required: true
+    },
+    isOpen:{
+        type: Boolean,
+        required: true
+    }
 
+});
+const orderSchema=new mongoose.Schema({
+    orderId:{
+        type: String,
+        required: true
+    },
+    items:{
+        type: Array,
+        required: true,
+        default:[]
+    },
+    eatery:{
+        type: String,
+        required: true
+    },
+    isReady:{
+        type: Boolean,
+        required: true,
+        default:false
+    },
+    date:{
+        type: Date,
+        required: true,
+        default:Date.now
+    },
+    user:{
+        type: String,
+        required: true
+    }
+})
+const Eatery = mongoose.model('Eatery',eaterySchema);
+const Order = mongoose.model('Order',orderSchema);
 userSchema.plugin(passportLocalMongoose);
 const User = mongoose.model('User',userSchema);
 passport.use(new passportLocal(User.authenticate()));
@@ -74,8 +146,8 @@ const isLoggedIn =(req,res,next) =>{
     }
     next();
 }
-//middleware to check that the person that is accessing the site is employee
 
+//middleware to check that the person that is accessing the site is employee
 const isEmployee =async(req,res,next)=>{
     if(!req.user){
         return res.redirect('/login');
@@ -87,7 +159,7 @@ const isEmployee =async(req,res,next)=>{
     if(utype=='employee'){
         return next();
     }else{
-        return res.redirect('/');
+        return res.redirect('/admin');
     }
 }
 //middleware to check that the person that is accessing the site is user
@@ -97,7 +169,6 @@ const isUser =async(req,res,next)=>{
     }
 
     const {username}=req.user;
-    // console.log(`The username is ${username}`);//debugging
     const userdata= await User.findOne({username});
     const utype=userdata.usertype;
 
@@ -108,33 +179,90 @@ const isUser =async(req,res,next)=>{
         return res.redirect(`/eatery/${temp}`);
     }
 }
-// function to shopw the page when register is opened
+//middleware to check that the person that is accessing the site is admin 
+const isAdmin =async(req,res,next)=>{
+    if(!req.user){
+        return res.redirect('/login');
+    }
+    const {username}=req.user;
+    const userdata=await User.findOne({username});
+    const utype=userdata.usertype;
+    if(utype=='admin'){
+        return next();
+    }else{
+        return res.redirect('/');
+    }
+}
+// function to show the page when register is opened
 app.get('/register',(req,res)=>{
     if(req.isAuthenticated()){
         return res.redirect('/');
     }
+    
     res.render('register');
 })
 // the function that will crate user and redirect to main page
 app.post('/register', async (req,res) =>{
     let {username , password , email }= req.body;
-    console.log(username, email,password);
-    const usr= new User({
-        username,
-        email
-    })
-    try{
-    const newUser = await User.register(usr,password);
-    console.log(newUser);
-    req.login(newUser,err =>{
-        if(err) return next(err);
-        res.redirect('/');
-    })
     
-    }catch(e){
-        res.send(`some error . check this out ${e.message}`)
+    // Check password length
+    if (password.length < 8) {
+        return res.render('register', { error: 'Password must be at least 8 characters long' });
     }
+    
+    // Check if email ends with @bennett.edu.in
+    if (!email.endsWith('@bennett.edu.in')) {
+        return res.render('register', { error: 'Enter Your Bennett University Email' });
+    }
+    
+    // Check if email already exists
+    const existingEmail = await User.findOne({ email: email });
+    if (existingEmail) {
+        return res.render('register', { error: 'Email already exists. Please use a different email or login.' });
+    }
+
+    // Check if username already exists
+    const existingUsername = await User.findOne({ username: username });
+    if (existingUsername) {
+        return res.render('register', { error: 'Username already exists. Please choose a different username.' });
+    }
+    //generate a random OTP
+    const OTP=Math.floor(100000 + Math.random() * 900000).toString();
+    //send OTP
+    sendOTP(email, OTP);
+    res.render('verify-otp', { email, OTP, username, password });
 })
+//POST request to verify the OTP that the user enters
+app.post('/verify-otp', async (req, res) => {
+    const { userOTP, correctOTP, email, username, password } = req.body;
+    
+    if (userOTP === correctOTP) {
+        try {
+            const usr = new User({
+                username,
+                email
+            });
+            
+            const newUser = await User.register(usr, password);
+            await req.login(newUser, (err) => {
+                if (err) return next(err);
+                res.redirect('/');
+            });
+        } catch (e) {
+            console.error('Registration error:', e);
+            res.redirect('/register');
+        }
+    } else {
+        res.render('verify-otp', { 
+            email, 
+            OTP: correctOTP,
+            username,
+            password,
+            error: 'OTP is incorrect. Please try again.' 
+        });
+    }
+});
+
 // functionm to open the patge when login is requested
 app.get('/login',(req,res)=>{
     if(req.isAuthenticated()){
@@ -142,13 +270,44 @@ app.get('/login',(req,res)=>{
     }
     res.render('login');
 })
-//function to login a user when they type the username and password
-app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}) , async(req,res)=>{
-    res.redirect('/');
+//function to update the eatery status
+app.post('/eatery-status',isLoggedIn,isEmployee,async(req,res)=>{
+    const {eatery,isOpen}=req.body;
+    const eateryName=eatery.toLowerCase();
+    const eateryData=await Eatery.findOne({Name:eateryName});
+    eateryData.isOpen=isOpen;
+    await eateryData.save();
 })
-
+//function to login a user when they type the username and password
+app.post('/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+        if (!user) {
+            return res.render('login', { error: 'Username or password is incorrect' });
+        }
+        req.logIn(user, (err) => {
+            if (err) {
+                return next(err);
+            }
+            return res.redirect('/');
+        });
+    })(req, res, next);
+})
+//GET request for home page of admin
+app.get('/admin',isLoggedIn,isAdmin,async(req,res)=>{
+    const users = await User.find({}, 'username email usertype');
+    res.render('admin',{users});
+})
+// GET for Home Page of eatery
 app.get('/eatery/:outlet',isLoggedIn,isEmployee,async(req,res)=>{
-    res.send(`This eatery is, ${req.params.outlet} hehe`);
+    const user=req.user;
+    const eatery=user.EmpOf.charAt(0).toUpperCase() + user.EmpOf.slice(1).toLowerCase();
+    const eateryName=user.EmpOf;
+    const eateryData=await Eatery.findOne({Name:eateryName});
+    const isOpen=eateryData.isOpen;
+    res.render('emphome',{eatery,isOpen});
 })
 // schema for food items
 const foodSchema = new mongoose.Schema({
@@ -169,7 +328,38 @@ const foodSchema = new mongoose.Schema({
         type: Boolean,
         required: true
     },
+    veg:{
+        type: Boolean,
+        required: true
+    }
 });
+//GET route to add a new item to the menu
+app.get('/add-item',isLoggedIn,isEmployee,async(req,res)=>{
+    res.render('add-item',{eatery:req.user.EmpOf});
+})
+//POST route to add a new item to the menu
+app.post('/add-item',isLoggedIn,isEmployee,async(req,res)=>{
+    const {eatery, name, price, veg} = req.body;
+    const newItem = new Food({
+        name,
+        price,
+        outlet: eatery,
+        isAvailable: true,
+        veg: Boolean(veg) // Ensure boolean conversion
+    });
+    await newItem.save();
+    res.status(200).send({ message: 'Item added successfully' });
+})
+//DELETE route to delete an item from the menu
+app.delete('/delete-item',isLoggedIn,isEmployee,async(req,res)=>{
+    const {eatery,itemName}=req.body;
+    try{
+        await Food.deleteOne({name:itemName,outlet:eatery});
+        res.status(200).send({ message: 'Item deleted successfully' });
+    }catch(e){
+        console.log(e);
+        res.status(500).send({ message: 'Error deleting item' });}
+})
 // model fopr the above schema
 const Food = mongoose.model('Fooditem',foodSchema);
 //function to logout
@@ -185,15 +375,46 @@ app.get('/logout',isLoggedIn,(req,res,next)=>{
 app.get('/',isLoggedIn,isUser,(req,res)=>{
     res.render('home')
 })
-
-
+//PATCH route to update the menu
+app.patch('/update-menu',isLoggedIn,isEmployee,async(req,res)=>{
+    const {eatery,items}=req.body;
+    try{
+        for (let item of items) {
+            await Food.updateOne(
+                { name: item.name ,outlet:eatery },
+                { $set: { isAvailable: item.isAvailable, price: item.price } }
+            );
+        }
+        res.send('menu updated');
+    }catch(e){
+        console.log(e);
+        res.status(500).send('Error updating menu');
+    }
+})
+//GET for menu which employee can edit
+app.get('/menu',isLoggedIn,isEmployee,async(req,res)=>{
+    const items=await Food.find({outlet:req.user.EmpOf});
+    const eatery=req.user.EmpOf;
+    res.render('menu',{items,eatery});
+})
+//GET for orders where employee can see the current pending orders
+app.get('/orders',isLoggedIn,isEmployee,async(req,res)=>{
+    const orders=await Order.find({eatery:req.user.EmpOf,isReady:false});
+    res.render('orders',{orders});
+})
+//GET for order info of each order for employee to see
+app.get('/orderinfo/:oid',isLoggedIn,isEmployee,async(req,res)=>{
+    const oid=req.params.oid;
+    const orderDetails=await Order.findOne({orderId:oid});
+    res.render('orderinfo',{orderDetails});
+})
 // POST route to update user's cart in database
 app.post('/cart', isLoggedIn,isUser, async (req, res) => {
     try {
         const user = req.user; 
-        user.cart = req.body.cart; 
+        user.cart.items = req.body.cart; 
+        user.cart.eatery = req.body.eatery;
         await user.save(); 
-        console.log('Cart saved:', user.cart);
         res.status(200).send('Cart saved to database');
     } catch (err) {
         console.error(err);
@@ -203,28 +424,178 @@ app.post('/cart', isLoggedIn,isUser, async (req, res) => {
 
 // GET route to retrieve user's cart
 app.get('/cart', isLoggedIn,isUser, async (req, res) => {
-    res.render('cart', { cart: req.user.cart || [] }); 
-    console.log(req.user);
+    res.render('cart', { cart: req.user.cart.items,eatery:req.user.cart.eatery || [] }); 
 });
 //profile page ( right now i am thinking to keep this for both employee and students)
-app.get('/profile',isLoggedIn,(req,res)=>{
-    const data={
-        username : req.user.username
-    };
-    console.log(data);
-    res.render('profile',data);
+app.get('/profile',isLoggedIn,async(req,res)=>{
+    const data=req.user;
+    const type=data.usertype;
+    if(type==='user'){
+    const orders=await Order.find({user:data.username});
+    res.render('profile',{data,orders});
+    }else{
+        res.render('eaprofile',{data});
+    }
 })
+
 // page for food items of each eatery
 app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     let eatery=req.params.eatery.toLowerCase();
-    const items = await Food.find({outlet : eatery});
-    if(items.length==0){
+    const filter = req.query.filter;
+    
+    // Build the query based on filter
+    let query = { outlet: eatery };
+    if (filter === 'veg') {
+        query.veg = true;
+    } else if (filter === 'nonveg') {
+        query.veg = false;
+    }
+    
+    const items = await Food.find(query);
+    
+    if(items.length==0 && !filter){
         return res.render('e404');
     }else{
-        
-        res.render('eatery',{items});
+        const eateryData=await Eatery.findOne({Name:eatery});
+        const open =eateryData.isOpen;
+        if(open){
+            res.render('eatery',{items,eatery,open,query:filter});
+        }else{
+            res.render('closed');
+        }
     }
 })
+//POST method for checkout (This is temporary)
+app.post('/checkout',isLoggedIn,isUser,async(req,res)=>{
+    const {totalAmount} = req.body;
+    const upiId='EATERY-UPI-ID';// the UPI id of eatery
+    const userName = 'EATERY-BANK-NAME'; // the UserName of eatery
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(userName)}&am=${totalAmount}&cu=INR`;
+    try {
+        const qrCodeDataUrl = await qrcode.toDataURL(upiUrl);
+        res.render('checkout', { totalAmount, qrCodeDataUrl }); // Render a new EJS file
+    } catch (err) {
+        console.error('Failed to generate QR Code', err);
+        res.send('Error generating QR Code');
+    }
+})
+//POST request to verify payment and confirm the order ( for now it is manual cause cannot use razorpay api)
+app.post('/verify-payment',isLoggedIn,isUser,async(req,res)=>{
+    const userr=req.user;
+    const username=userr.username;
+    const cart=userr.cart.items;
+    const eatery=userr.cart.eatery;
+    const updatedCart = {
+        orderId: nanoid(), 
+        isReady: false,                 
+        date: new Date().toISOString(), 
+        items: cart.map(item => ({
+            ...item
+        })) ,
+        eatery:eatery ,     
+        user: username
+    };
+    
+    try{
+        const cartLength=cart.length;
+        if(cartLength>0){
+        await Order.create(updatedCart);
+        const tempcart={
+            items:[],
+            eatery:''
+        }
+        await User.findByIdAndUpdate(userr._id, { $set: { cart:tempcart } });
+        res.redirect(`/order/${updatedCart.orderId}`);
+    }
+    
+    }catch(e){
+        console.log(`error occured ${e}`);
+        res.status(500).send('Error occured while updpatiing our database please contact admin');
+    }
+
+})
+
+//GET for order info of each order on user's end
+app.get('/order/:oid',isLoggedIn,isUser,async(req,res)=>{
+    const oid=req.params.oid;
+    const user=req.user;
+    const orderDetails=await Order.findOne({orderId:oid});
+    res.render('orderpage',orderDetails);
+})
+
+// Add this new route for marking order as completed
+app.patch('/order/:oid/complete', isLoggedIn, isEmployee, async(req,res)=>{
+    try {
+        const orderId = req.params.oid;
+        await Order.findOneAndUpdate(
+            { orderId: orderId },
+            { $set: { isReady: true } }
+        );
+        res.status(200).send({ message: 'Order marked as completed' });
+    } catch (error) {
+        console.error('Error marking order as completed:', error);
+        res.status(500).send({ message: 'Error marking order as completed' });
+    }
+});
+
+// Route to update user type
+app.patch('/admin/update-user-type',isLoggedIn,isAdmin,async(req,res)=>{
+    try {
+        const {username, newType, eatery} = req.body;
+        
+        // Validate new type
+        if (!['user', 'employee', 'admin'].includes(newType)) {
+            return res.status(400).send({ message: 'Invalid user type' });
+        }
+
+        // Validate eatery if user type is employee
+        if (newType === 'employee') {
+            const validEateries = ['kathi', 'chaiok', 'hotspot', 'quench', 'snapeats', 'southern'];
+            if (!validEateries.includes(eatery)) {
+                return res.status(400).send({ message: 'Invalid eatery' });
+            }
+        }
+
+        await User.findOneAndUpdate(
+            { username: username },
+            { 
+                $set: { 
+                    usertype: newType,
+                    EmpOf: newType === 'employee' ? eatery : 'none'
+                } 
+            }
+        );
+
+        res.status(200).send({ message: 'User type updated successfully' });
+    } catch (error) {
+        console.error('Error updating user type:', error);
+        res.status(500).send({ message: 'Error updating user type' });
+    }
+});
+
+// Route to delete user
+app.delete('/admin/delete-user', isLoggedIn, isAdmin, async(req, res) => {
+    try {
+        const { username } = req.body;
+        
+        // Prevent deleting the last admin
+        const adminCount = await User.countDocuments({ usertype: 'admin' });
+        const userToDelete = await User.findOne({ username });
+        
+        if (userToDelete.usertype === 'admin' && adminCount <= 1) {
+            return res.status(400).send({ message: 'Cannot delete the last admin user' });
+        }
+
+        // Delete the user
+        await User.findOneAndDelete({ username });
+        
+        res.status(200).send({ message: 'User deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).send({ message: 'Error deleting user' });
+    }
+});
+
 // e404 ofcourse 
 app.get('*',(req,res)=>{
     res.render('e404');

@@ -1,0 +1,278 @@
+<%- include('partials/headere') %>
+<%- include('partials/empnave') %>
+
+<div class="main-container">
+    <h1 class="menu-title text-center mb-4">MENU</h1>
+    
+    <div class="menu-container">
+        <div class="menu-items">
+            <% for(item of items) { %>
+                <div class="menu-item" data-item-name="<%= item.name %>">
+                    <div class="item-controls">
+                        <button class="btn btn-danger delete-btn" onclick="deleteItem('<%= item.name %>')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="item-name"><%= item.name %></div>
+                    <div class="item-availability">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input availability-toggle" type="checkbox" 
+                                   <%= item.isAvailable ? 'checked' : '' %>>
+                            <label class="form-check-label"><%= item.isAvailable ? 'Available' : 'Not Available' %></label>
+                        </div>
+                    </div>
+                    <div class="item-price">
+                        <input type="number" class="price-input" value="<%= item.price %>" readonly>
+                        <button class="btn btn-outline-primary edit-price-btn">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            <% }; %>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/add-item" class="btn btn-primary add-item-btn">
+            <i class="fas fa-plus"></i> Add New Item
+        </a>
+        <button class="btn btn-success confirm-update-btn" onclick="confirmUpdate()">
+            Confirm Update
+        </button>
+    </div>
+</div>
+
+<!-- Include Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Include Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<style>
+    body {
+        overflow-y: auto !important; /* Override the existing overflow: hidden */
+        min-height: 100vh;
+    }
+
+    .main-container {
+        padding: 100px 20px 20px;
+        min-height: 100vh;
+        position: relative;
+        overflow-y: visible; /* Change from auto to visible */
+    }
+
+    .menu-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .menu-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin: 20px auto;
+        max-width: 800px;
+        margin-bottom: 100px;
+    }
+
+    .menu-items {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        overflow-y: visible; /* Change from auto to visible */
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        gap: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .menu-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .item-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .item-name {
+        flex: 1;
+        font-weight: 500;
+        font-size: 1.1rem;
+    }
+
+    .item-availability {
+        min-width: 150px;
+    }
+
+    .item-price {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 150px;
+    }
+
+    .price-input {
+        width: 80px;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: right;
+    }
+
+    .price-input:read-only {
+        background: #f8f9fa;
+    }
+
+    .action-buttons {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        right: 30px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        z-index: 1000;
+    }
+
+    .add-item-btn, .confirm-update-btn {
+        padding: 12px 25px;
+        font-size: 1.1rem;
+        border-radius: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        background: white;
+        color: #333;
+        text-decoration: none;
+        border: none;
+    }
+
+    .add-item-btn {
+        background: #007bff;
+        color: white;
+    }
+
+    .confirm-update-btn {
+        background: #28a745;
+        color: white;
+    }
+
+    .add-item-btn:hover, .confirm-update-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        color: white;
+    }
+
+    .delete-btn, .edit-price-btn {
+        padding: 8px;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+        .menu-title {
+            font-size: 2rem;
+        }
+
+        .menu-item {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .item-availability, .item-price {
+            min-width: 100%;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+        }
+
+        .add-item-btn, .confirm-update-btn {
+            width: 100%;
+        }
+    }
+</style>
+<script>
+    // Handle price editing
+    document.querySelectorAll('.edit-price-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const priceInput = this.previousElementSibling;
+            if (priceInput.readOnly) {
+                priceInput.readOnly = false;
+                this.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                priceInput.readOnly = true;
+                this.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+            }
+        });
+    });
+
+    // Handle item deletion
+    async function deleteItem(itemName) {
+        if (confirm(`Are you sure you want to delete ${itemName}?`)) {
+            try {
+                const response = await axios.delete('/delete-item', {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: {
+                        eatery: '<%= eatery %>',
+                        itemName: itemName
+                    }
+                });
+                
+                if (response.status === 200) {
+                    // Remove the item from DOM
+                    document.querySelector(`[data-item-name="${itemName}"]`).remove();
+                    alert(`${itemName} deleted successfully`);
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                // Only show error if it's not a successful deletion
+                if (error.response && error.response.status !== 200) {
+                    alert('Failed to delete item. Please try again.');
+                }
+            }
+        }
+    }
+
+    // Handle menu update
+    async function confirmUpdate() {
+        const menuItems = Array.from(document.querySelectorAll('.menu-item')).map(item => ({
+            name: item.querySelector('.item-name').textContent,
+            isAvailable: item.querySelector('.availability-toggle').checked,
+            price: parseFloat(item.querySelector('.price-input').value)
+        }));
+
+        try {
+            const response = await axios.patch('/update-menu', {
+                eatery: '<%= eatery %>',
+                items: menuItems
+            });
+            
+            if (response.status === 200) {
+                alert('Menu updated successfully!');
+            }
+        } catch (error) {
+            console.error('Error updating menu:', error);
+            alert('Failed to update menu');
+        }
+    }
+</script>
+

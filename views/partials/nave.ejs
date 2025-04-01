@@ -4,6 +4,15 @@
             <div class="foods w-100">
                 <div class="items-section">
                     <div id="food-list" class="mb-5">
+                        <div class="container mt-3">
+                            <div class="d-flex justify-content-end mb-3">
+                                <div class="btn-group" role="group" aria-label="Food filter">
+                                    <a href="/<%= eatery %>" class="btn btn-outline-primary <%= !query || query === 'all' ? 'active' : '' %>">All</a>
+                                    <a href="/<%= eatery %>?filter=veg" class="btn btn-outline-success <%= query === 'veg' ? 'active' : '' %>">Veg</a>
+                                    <a href="/<%= eatery %>?filter=nonveg" class="btn btn-outline-danger <%= query === 'nonveg' ? 'active' : '' %>">Non-Veg</a>
+                                </div>
+                            </div>
+                        </div>
                         <!-- Header Row -->
                         <div class="row header-row gx-0 mb-3 py-2 bg-light rounded-top">
                             <div class="col-6 text-start ps-4 fw-bold">Item</div>

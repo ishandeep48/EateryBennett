@@ -1,0 +1,174 @@
+<%- include('partials/headere') %>
+<%- include('partials/empnave') %>
+
+<div class="main-container">
+    <h1 class="page-title text-center mb-4">Order No: <%= orderDetails.orderId %></h1>
+    
+    <div class="order-info-container">
+        <div class="customer-info">
+            <h3>Ordered by: <%= orderDetails.user %></h3>
+        </div>
+
+        <div class="items-list">
+            <h3 class="mb-3">Items</h3>
+            <% for(item of orderDetails.items) { %>
+                <div class="item-row">
+                    <div class="item-name"><%= item.name %></div>
+                    <div class="item-quantity">x<%= item.quantity %></div>
+                    <div class="item-price">₹<%= item.price %></div>
+                </div>
+            <% }; %>
+        </div>
+
+        <div class="action-container">
+            <button class="complete-btn" onclick="markAsCompleted('<%= orderDetails.orderId %>')">
+                Mark as Completed
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        overflow-y: auto !important;
+        min-height: 100vh;
+    }
+
+    .main-container {
+        padding: 100px 20px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .order-info-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 800px;
+        margin-top: 20px;
+        position: relative;
+    }
+
+    .customer-info {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+
+    .customer-info h3 {
+        margin: 0;
+        color: #333;
+        font-size: 1.2rem;
+    }
+
+    .items-list {
+        margin-bottom: 40px;
+    }
+
+    .items-list h3 {
+        color: #333;
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+    }
+
+    .item-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .item-name {
+        flex: 2;
+        font-weight: 500;
+    }
+
+    .item-quantity {
+        flex: 1;
+        text-align: center;
+        color: #666;
+    }
+
+    .item-price {
+        flex: 1;
+        text-align: right;
+        font-weight: 500;
+    }
+
+    .action-container {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 30px;
+    }
+
+    .complete-btn {
+        padding: 12px 30px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .complete-btn:hover {
+        background: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .order-info-container {
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .item-row {
+            padding: 10px;
+            font-size: 0.9rem;
+        }
+
+        .complete-btn {
+            width: 100%;
+            padding: 10px 20px;
+        }
+    }
+</style>
+
+<script>
+    async function markAsCompleted(orderId) {
+        if (confirm('Are you sure you want to mark this order as completed?')) {
+            try {
+                const response = await axios.patch(`/order/${orderId}/complete`);
+                if (response.status === 200) {
+                    alert('Order marked as completed successfully!');
+                    window.location.href = '/orders';
+                }
+            } catch (error) {
+                console.error('Error marking order as completed:', error);
+                alert('Failed to mark order as completed. Please try again.');
+            }
+        }
+    }
+</script>
+

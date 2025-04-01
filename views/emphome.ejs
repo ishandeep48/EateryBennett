@@ -1,0 +1,67 @@
+<%- include('partials/headere') %>
+<%- include('partials/empnave') %>
+
+<div class="main-container">
+    <h1 class="eatery-title text-center mb-4"><%= eatery %></h1>
+    
+    <div class="toggle-container text-center mb-5">
+        <div class="form-check form-switch d-inline-block">
+            <input class="form-check-input" type="checkbox" id="eateryStatus" <%= isOpen ? 'checked' : '' %>>
+            <label class="form-check-label" for="eateryStatus">Eatery Status: <span id="statusText"> <%= isOpen ? 'Open' : 'Closed' %></span></label>
+        </div>
+    </div>
+
+    <div class="action-cards">
+        <a href="/menu" style="text-decoration: none; color: inherit;">
+        <div class="action-card menu-card ">
+            <div class="card-content bg-secondary bg-gradient ">
+                <h2 class="text-white">Menu</h2>
+                <p class="text-white">Manage your menu items</p>
+            </div>
+        </div>
+        </a>
+        <a href="/orders" style="text-decoration: none; color: inherit;">
+        <div class="action-card orders-card">
+            <div class="card-content bg-secondary bg-gradient ">
+                <h2 class="text-white">Orders</h2>
+                <p class="text-white">View and manage orders</p>
+            </div>
+        </div>
+        </a>
+    </div>
+
+    <div class="logout-container">
+        <form action="/logout" method="GET">
+            <button class="btn btn-danger logout-btn">Logout</button>
+        </form>
+    </div>
+</div>
+
+
+
+<script>
+    document.getElementById('eateryStatus').addEventListener('change', async function() {
+        const statusText = document.getElementById('statusText');
+        const isOpen = this.checked;
+        statusText.textContent = isOpen ? 'Open' : 'Closed';
+
+        try {
+            const response = await axios.post('/eatery-status', {
+                eatery: '<%= eatery %>',
+                isOpen: isOpen
+            });
+
+            console.log('Status updated successfully:', response.data);
+        } catch (error) {
+            console.error('Error updating status:', error);
+            // Revert the toggle if the request failed
+            this.checked = !isOpen;
+            statusText.textContent = !isOpen ? 'Open' : 'Closed';
+        }
+    });
+</script>
+
+<script src="/Resources/scripts/scripts3.js"></script>
+
+
+

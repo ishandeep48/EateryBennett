@@ -1,0 +1,270 @@
+<%- include('partials/headere') %>
+<%- include('partials/empnave') %>
+
+<div class="main-container">
+    <h1 class="page-title text-center mb-4">Admin Portal</h1>
+    
+    <div class="admin-container">
+        <div class="search-section mb-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search users by username or email...">
+        </div>
+
+        <div class="users-list">
+            <% for(user of users) { %>
+                <div class="user-card">
+                    <div class="user-info">
+                        <div class="username"><%= user.username %></div>
+                        <div class="email"><%= user.email %></div>
+                        <div class="current-type">Current Type: <span class="badge bg-primary"><%= user.usertype %></span></div>
+                    </div>
+                    <div class="user-actions">
+                        <select class="form-select user-type-select" data-username="<%= user.username %>" onchange="toggleEaterySelect(this)">
+                            <option value="user" <%= user.usertype === 'user' ? 'selected' : '' %>>User</option>
+                            <option value="employee" <%= user.usertype === 'employee' ? 'selected' : '' %>>Employee</option>
+                            <option value="admin" <%= user.usertype === 'admin' ? 'selected' : '' %>>Admin</option>
+                        </select>
+                        <select class="form-select eatery-select" data-username="<%= user.username %>" style="display: <%= user.usertype === 'employee' ? 'block' : 'none' %>">
+                            <option value="kathi" <%= user.EmpOf == 'kathi' ? 'selected' : '' %>>Kathi</option>
+                            <option value="chaiok" <%= user.EmpOf == 'chaiok' ? 'selected' : '' %>>Chai OK</option>
+                            <option value="hotspot" <%= user.EmpOf == 'hotspot' ? 'selected' : '' %>>HotSpot</option>
+                            <option value="quench" <%= user.EmpOf == 'quench' ? 'selected' : '' %>>Quench</option>
+                            <option value="snapeats" <%= user.EmpOf == 'snapeats' ? 'selected' : '' %>>SnapEats</option>
+                            <option value="southern" <%= user.EmpOf == 'southern' ? 'selected' : '' %>>Southern Stories</option>
+                        </select>
+                        <button class="btn btn-primary update-btn" onclick="updateUserType('<%= user.username %>')">
+                            Update
+                        </button>
+                        <button class="btn btn-danger delete-btn" onclick="deleteUser('<%= user.username %>')">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            <% }; %>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        overflow-y: auto !important;
+        min-height: 100vh;
+    }
+
+    .main-container {
+        padding: 100px 20px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #333;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .admin-container {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 1000px;
+        margin-top: 20px;
+    }
+
+    .search-section {
+        margin-bottom: 30px;
+    }
+
+    .search-section input {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        font-size: 1rem;
+    }
+
+    .users-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .user-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .user-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .user-info {
+        flex: 1;
+    }
+
+    .username {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .email {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .current-type {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .user-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .user-type-select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        min-width: 120px;
+    }
+
+    .eatery-select {
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #ddd;
+        min-width: 120px;
+    }
+
+    .update-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .update-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .delete-btn {
+        padding: 8px 20px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        background-color: #dc3545;
+        border: none;
+        color: white;
+    }
+
+    .delete-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        background-color: #c82333;
+    }
+
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .admin-container {
+            padding: 20px;
+            margin: 10px;
+        }
+
+        .user-card {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .user-actions {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const userCards = document.querySelectorAll('.user-card');
+        
+        userCards.forEach(card => {
+            const username = card.querySelector('.username').textContent.toLowerCase();
+            const email = card.querySelector('.email').textContent.toLowerCase();
+            
+            if (username.includes(searchTerm) || email.includes(searchTerm)) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // Toggle eatery select visibility
+    function toggleEaterySelect(typeSelect) {
+        const username = typeSelect.dataset.username;
+        const eaterySelect = document.querySelector(`.eatery-select[data-username="${username}"]`);
+        eaterySelect.style.display = typeSelect.value === 'employee' ? 'block' : 'none';
+    }
+
+    // Update user type and eatery
+    async function updateUserType(username) {
+        const typeSelect = document.querySelector(`.user-type-select[data-username="${username}"]`);
+        const eaterySelect = document.querySelector(`.eatery-select[data-username="${username}"]`);
+        const newType = typeSelect.value;
+        const eatery = newType === 'employee' ? eaterySelect.value : 'none';
+
+        if (confirm(`Are you sure you want to change ${username}'s type to ${newType}${newType === 'employee' ? ` and assign to ${eatery}` : ''}?`)) {
+            try {
+                const response = await axios.patch('/admin/update-user-type', {
+                    username: username,
+                    newType: newType,
+                    eatery: eatery
+                });
+
+                if (response.status === 200) {
+                    alert('User type updated successfully!');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error updating user type:', error);
+                alert('Failed to update user type. Please try again.');
+            }
+        }
+    }
+
+    // Delete user function
+    async function deleteUser(username) {
+        if (confirm(`Are you sure you want to delete the user "${username}"? This action cannot be undone.`)) {
+            try {
+                const response = await axios.delete('/admin/delete-user', {
+                    data: { username: username }
+                });
+
+                if (response.status === 200) {
+                    alert('User deleted successfully!');
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                alert('Failed to delete user. Please try again.');
+            }
+        }
+    }
+</script>

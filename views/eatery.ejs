@@ -2,22 +2,23 @@
 <%- include('partials/mainnave')  %>
 <%- include('partials/nave.ejs') %>
 
+
                         
 <% for(item of items) {%>
+    <% if(item.isAvailable){    %>
 <div class="row text-center py-3 food-item align-items-center mb-2 bg-white rounded shadow-sm">
     <div class="col-6 text-start ps-4"><%= item.name %></div>
     <div class="col-3"><%= item.price %></div>
     <div class="col-3 d-flex justify-content-center align-items-center">
-        <button class="btn btn-lg btn-outline-secondary minus-btn" aria-label="Reduce quantity">-</button>
+        <button class="btn btn-lg btn-outline-secondary minus-btn px-2 py-2" aria-label="Reduce quantity">-</button>
         <span class="mx-3 quantity">0</span>
-        <button class="btn btn-lg btn-primary plus-btn" aria-label="Increase quantity">+</button>
+        <button class="btn btn-lg btn-primary plus-btn px-2 py-2 me-3" aria-label="Increase quantity">+</button>
     </div>
 </div>
 <% } %>
+<% } %>
 
-
-
-
+<input type="hidden" id="eatery-name" value="<%= eatery %>">
 
 <%- include('partials/eateryfooter.ejs')  %>
 
