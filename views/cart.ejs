@@ -1,26 +1,48 @@
 
 <%- include('partials/headere')  %>
 <%- include('partials/mainnave')  %>
-
+    <% let eatt=''; %>
+    <% if (eatery === 'chaiok') { eatt = 'Chai Ok'; } 
+    else if (eatery === 'kathi') { eatt = 'Kathi'; } 
+    else if (eatery === 'hotspot') { eatt = 'Hotspot'; } 
+    else if (eatery === 'quench') { eatt = 'Quench'; } 
+    else if (eatery === 'snapeats') { eatt = 'Snap Eats'; } 
+    else if (eatery === 'southern') { eatt = 'Southern Stories'; } 
+    else { eatt = 'Unknown Eatery'; } %>
+    <% let total=0; %>
+    <% for(items of cart){ %>
+        <% total+=items.price*items.quantity %>
+        <% } %>
     <main class="container mt-5 pt-5">
         <section class="cart-container" style="max-width: 800px; margin: 0 auto;">
-            <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Your Cart</h2>
+            <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">
+
+                Your Cart <% if(total>0){ %><br><small class="text-muted" style="font-size: 1.3rem;"> <%= eatt %><% } %></small>
+            </h2>
             <div class="bg-light rounded p-4 shadow-sm">
                 <div id="cartItems" class="mb-4 " style="display: block;">
                     <!-- Cart items will be loaded here -->
-                    <div class="row text-center py-2 border-bottom">
-                        <% //total+=items.price*items.quantity %>
+                    <div class="row text-center py-2 border-bottom d-none d-md-flex">
+                        
                         <div class="col-md-6">Item</div>
                         <div class="col-md-3">Price</div>
                         <div class="col-md-3">Quantity</div>
                     </div>
-                    <% let total=0; %>
+                    
                     <% for(items of cart){ %>
-                        <div class="row text-center py-2 border-bottom">
-                            <% total+=items.price*items.quantity %>
-                            <div class="col-md-6"><%=items.name%></div>
-                            <div class="col-md-3">₹<%=items.price%></div>
-                            <div class="col-md-3"><%= items.quantity %></div>
+                        <div class="row text-center py-2 border-bottom cart-item">
+                            
+                            <div class="col-12 col-sm-6 cart-item-name d-flex justify-content-center align-items-center mb-2 mb-sm-0">
+                                <%=items.name%>
+                            </div>
+                            <div class="col-6 col-sm-3 d-flex justify-content-center align-items-center mb-2 mb-sm-0">
+                                <%=items.price%>
+                            </div>
+                            <div class="col-6 col-sm-3 d-flex justify-content-center align-items-center">
+                                <button class="btn btn-lg btn-outline-secondary minus-btn px-2 py-2">-</button>
+                                <span class="mx-3 quantity"><%= items.quantity %></span>
+                                <button class="btn btn-lg btn-primary plus-btn px-2 py-2 me-3">+</button>
+                            </div>
                         </div>
                         <% } %>
                 </div>
@@ -29,19 +51,55 @@
                 </h3>
                 <% if(total>0){ %>
                 <div class="text-center p-3 bg-white rounded shadow-sm">
-                   
+                    <div class="d-flex justify-content-center gap-3">
+                        
+                        <button type="button" class="btn btn-success" id="updateCart">
+                            Update Cart
+                        </button>
+                    
                     <form action="/checkout" method="POST">
                         <input type="hidden" name="totalAmount" value="<%= total %>">
                         <button class="btn btn-primary" id="checkout-btn">
-                            PAY ₹<%= total  %>
+                            PAY  ₹<span id="cartAmount"><%= total  %></span>
                         </button>
                     </form>
+                </div>
+                </div>
                     <% } %>
-                </div>  
+                  
             </div>
         </section>
     </main>
 
-    <script src="/scripts/script.js"></script>
+    <script src="/scripts/scripts3.js"></script>
+    <script>
+        const cartTotal=document.getElementById('cartAmount');
+        const updateBtn=document.getElementById('updateCart');
+        updateBtn.addEventListener('click', async function () {
+        console.log('Update button clicked!'); // Add this line for debugging
+        const cart = [];
+        document.querySelectorAll('.cart-item').forEach(item => {
+            const qty = parseInt(item.querySelector('.quantity').textContent);
+            const name = item.children[0].textContent.trim();
+            const price = parseFloat(item.children[1].textContent.replace('₹', ''));
+    
+            if (qty > 0) {
+                cart.push({
+                    name: name,
+                    price: price,
+                    quantity: qty
+                });
+            }
+        });
+    
+        try {
+            const response = await axios.post('/update-cart', { cart });
+            console.log('Response from server:', response.data); // Log the server response
+            window.location.href = '/update-cart'; // Make sure this redirection is what you want
+        } catch (e) {
+            console.error('Error sending cart data:', e);
+        }
+    });
+    </script>
 </body>
 </html>

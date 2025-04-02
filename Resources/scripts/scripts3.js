@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
     let total = 0;
     const submitBtn = document.getElementById('submitCart');
     const totalDisplay = document.getElementById('totalAmount');
-
     document.querySelectorAll('.food-item').forEach(item => {
         const minusBtn = item.querySelector('.minus-btn');
         const plusBtn = item.querySelector('.plus-btn');
@@ -29,6 +28,22 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+    document.querySelectorAll('.cart-item').forEach(item=>{
+        const minusBtn = item.querySelector('.minus-btn');
+        const plusBtn = item.querySelector('.plus-btn');
+        const quantityvalue= item.querySelector('.quantity');
+        
+        plusBtn.addEventListener('click',()=>{
+            const current = parseInt(quantityvalue.textContent);
+            quantityvalue.textContent  = current+1;
+        })
+        minusBtn.addEventListener('click',()=>{
+            const current = parseInt(quantityvalue.textContent);
+            if(current>0){
+            quantityvalue.textContent=current-1;
+        }
+        })
+    })
 
     submitBtn.addEventListener('click',async function() {
 
@@ -74,62 +89,5 @@ document.addEventListener("DOMContentLoaded", function () {
             statusText.textContent = !isOpen ? 'Open' : 'Closed';
         }
     });
-
-
-    // document.querySelectorAll('.edit-price-btn').forEach(button => {
-    //     button.addEventListener('click', function() {
-    //         const priceInput = this.previousElementSibling;
-    //         if (priceInput.readOnly) {
-    //             priceInput.readOnly = false;
-    //             this.innerHTML = '<i class="fas fa-check"></i>';
-    //         } else {
-    //             priceInput.readOnly = true;
-    //             this.innerHTML = '<i class="fas fa-pencil-alt"></i>';
-    //         }
-    //     });
-    // });
-
-    // // Handle item deletion
-    // async function deleteItem(itemName) {
-    //     if (confirm(`Are you sure you want to delete ${itemName}?`)) {
-    //         try {
-    //             await axios.delete('/delete-menu-item', {
-    //                 data: {
-    //                     eatery: '<%= eatery %>',
-    //                     itemName: itemName
-    //                 }
-    //             });
-    //             // Remove the item from DOM
-    //             document.querySelector(`[data-item-name="${itemName}"]`).remove();
-    //         } catch (error) {
-    //             console.error('Error deleting item:', error);
-    //             alert('Failed to delete item');
-    //         }
-    //     }
-    // }
-
-    // // Handle menu update
-    // async function confirmUpdate() {
-    //     const menuItems = Array.from(document.querySelectorAll('.menu-item')).map(item => ({
-    //         name: item.dataset.itemName,
-    //         isAvailable: item.querySelector('.availability-toggle').checked,
-    //         price: parseFloat(item.querySelector('.price-input').value)
-    //     }));
-
-    //     try {
-    //         await axios.patch('/update-menu', {
-    //             eatery: '<%= eatery %>',
-    //             items: menuItems
-    //         });
-    //         alert('Menu updated successfully!');
-    //     } catch (error) {
-    //         console.error('Error updating menu:', error);
-    //         alert('Failed to update menu');
-    //     }
-    // }
-    // document.getElementById('eateryStatus').addEventListener('change', function() {
-    //     const statusText = document.getElementById('statusText');
-    //     statusText.textContent = this.checked ? 'Open' : 'Closed';
-    // });
     
 });

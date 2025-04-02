@@ -10,17 +10,26 @@ const qrcode=require('qrcode');
 const methodOverride = require('method-override');
 const { customAlphabet } = require('nanoid');
 const nodemailer = require('nodemailer');
+require('dotenv').config({ path: './keys.env' });
+
+const port = process.env.PORT || 3000;
+const mongoURI = process.env.MONGO_URI;
+const secretKey = process.env.SECRET_KEY;
+const upiID = process.env.UPI_ID;
+const OEmail=process.env.EMAIL;
+const AppPass=process.env.APP_PASS;
+const upiName=process.env.UPI_Name;
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'EATERY-EMAIL-ADDRESS', // the email of the eatery
-        pass: 'EATERY-EMAIL-PASSWORD' // the app-password of the eatery
+        user: OEmail, // the email of the eatery
+        pass: AppPass // the app-password of the eatery
     }
 });
 async function sendOTP(email,otp){
     const mailOptions={
-        from:'EATERY-EMAIL-ADDRESS',
+        from:OEmail,
         to:email,
         subject:'One Time Password for Registration on Bennett Eatery',
         text:`Your One Time Password for registration on Bennett Eatery is ${otp} . Please do not share this with anyone. `
@@ -37,7 +46,7 @@ const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLM
 app.use(methodOverride('_method'));
 app.use(express.urlencoded({extended:true}));
 app.use(session({
-    secret: 'secret',
+    secret: secretKey,
     resave: false,
     saveUninitialized: false
 }));
@@ -49,7 +58,11 @@ app.use(express.static(path.join(__dirname, 'Resources')));
 app.set('view engine','ejs');
 
 
-mongoose.connect('mongodb://127.0.0.1:27017/Eatery')
+// mongoose.connect('mongodb://127.0.0.1:27017/Eatery')
+mongoose.connect(mongoURI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
 .then(async()=>{
     console.log("Connected to MongoDB - eatery");
 })
@@ -84,10 +97,6 @@ const userSchema = new mongoose.Schema({
     EmpOf:{
         type: String,
         default:'none'
-    },
-    PrevOrder:{
-        type: Array,
-        default:[]
     }
 });
 const eaterySchema = new mongoose.Schema({
@@ -412,15 +421,84 @@ app.get('/orderinfo/:oid',isLoggedIn,isEmployee,async(req,res)=>{
 app.post('/cart', isLoggedIn,isUser, async (req, res) => {
     try {
         const user = req.user; 
-        user.cart.items = req.body.cart; 
-        user.cart.eatery = req.body.eatery;
-        await user.save(); 
-        res.status(200).send('Cart saved to database');
+        const currEatery = user.cart.eatery;
+        const newEatery = req.body.eatery;
+        const newItems = req.body.cart;
+        if(currEatery!=newEatery){
+            user.cart.items=newItems;
+            user.cart.eatery=newEatery;
+            
+        }else{
+        const existingItems=user.cart.items;
+        newItems.forEach(newItem => {
+        
+            const existingItem = existingItems.find(exiItem => exiItem.name == newItem.name);
+        
+            if (existingItem) {
+                existingItem.quantity += newItem.quantity;
+            } else {
+                existingItems.push(newItem);
+            }
+        });
+        
+        user.cart.items=existingItems;
+        user.markModified('cart.items');
+
+    }
+        await user.save();
+        res.status(200).send('Updated the values of the cart');
+    } catch (err) {
+
+        console.error(err);
+        res.status(500).send('Error saving cart');
+    }
+});
+//POST to handle updation of cart
+app.post('/update-cart', isLoggedIn, isUser, async (req, res) => {
+    try {
+        const user = req.user;
+        const newItems = req.body.cart;
+
+
+
+        if (!newItems) {
+            return res.status(400).send('No cart data provided');
+        }
+
+        // Convert incoming items to a Map for quick lookup
+        const newItemsMap = new Map(newItems.map(item => [item.name, item]));
+
+        // Filter out items from current cart that are not present in the newItemsMap
+        user.cart.items = user.cart.items.filter(existingItem => newItemsMap.has(existingItem.name));
+
+        // Update existing items' quantities or add new ones
+        user.cart.items.forEach(existingItem => {
+            if (newItemsMap.has(existingItem.name)) {
+                existingItem.quantity = newItemsMap.get(existingItem.name).quantity;
+                newItemsMap.delete(existingItem.name);
+            }
+        });
+
+        // Add any new items that were not already in the cart
+        newItemsMap.forEach((newItem) => {
+            user.cart.items.push(newItem);
+        });
+
+        user.markModified('cart.items'); 
+
+        await user.save();
+
+        // Redirect to /cart
+        res.redirect('/cart'); 
     } catch (err) {
         console.error(err);
         res.status(500).send('Error saving cart');
     }
 });
+//If this is called the redirect ot cart
+app.get('/update-cart',isLoggedIn,isUser,(req,res)=>{
+    res.redirect('/cart');
+})
 
 // GET route to retrieve user's cart
 app.get('/cart', isLoggedIn,isUser, async (req, res) => {
@@ -468,8 +546,8 @@ app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
 //POST method for checkout (This is temporary)
 app.post('/checkout',isLoggedIn,isUser,async(req,res)=>{
     const {totalAmount} = req.body;
-    const upiId='EATERY-UPI-ID';// the UPI id of eatery
-    const userName = 'EATERY-BANK-NAME'; // the UserName of eatery
+    const upiId=upiID;// the UPI id of eatery
+    const userName = upiName; // the UserName of eatery
     const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(userName)}&am=${totalAmount}&cu=INR`;
     try {
         const qrCodeDataUrl = await qrcode.toDataURL(upiUrl);
@@ -601,6 +679,6 @@ app.get('*',(req,res)=>{
     res.render('e404');
 })
 // let the server start my lord
-app.listen(3000, '0.0.0.0',()=>{
-    console.log("Listening on port 3000!");
+app.listen(port, '0.0.0.0',()=>{
+    console.log(`Listening on port ${port}!`);
 })

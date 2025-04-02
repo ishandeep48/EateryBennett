@@ -1,25 +1,48 @@
 <%- include('partials/headere') %>
 <%- include('partials/mainnave') %>
-
+<% let eatt=''; %>
+    <% if (eatery === 'chaiok') { eatt = 'Chai Ok'; } 
+    else if (eatery === 'kathi') { eatt = 'Kathi'; } 
+    else if (eatery === 'hotspot') { eatt = 'Hotspot'; } 
+    else if (eatery === 'quench') { eatt = 'Quench'; } 
+    else if (eatery === 'snapeats') { eatt = 'Snap Eats'; } 
+    else if (eatery === 'southern') { eatt = 'Southern Stories'; } 
+    else { eatt = 'Unknown Eatery'; } %>
 <main class="container mt-5 pt-5">
+    
     <section class="cart-container" style="max-width: 800px; margin: 0 auto;">
-        <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Order #<%= orderId %></h2>
+        <!-- <div class="text-end mb-4">
+            <%= new Date(date).toLocaleDateString() %> <%= new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+        </div> -->
+        <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Order #<%= orderId %> <br>
+           <small class="text-muted" style="font-size: 1.3rem;"> From <%= eatt %> on <%= new Date(date).toLocaleDateString() %> <%= new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
+        </small></h2>
+    
+   
+    
+
+
         <div class="bg-light rounded p-4 shadow-sm">
             <div id="cartItems" class="mb-4 " style="display: block;">
                 <!-- Cart items will be loaded here -->
                 <% //let total=0; %>
-                <div class="row text-center py-2 border-bottom">
+                <div class="row text-center py-2 border-bottom d-none d-md-flex">
                     <% //total+=items.price*items.quantity %>
                     <div class="col-md-6">Item</div>
                     <div class="col-md-3">Price</div>
                     <div class="col-md-3">Quantity</div>
                 </div>
                 <% for(item of items){ %>
-                    <div class="row text-center py-2 border-bottom">
-                        <% //total+=items.price*items.quantity %>
-                        <div class="col-md-6"><%= item.name %></div>
-                        <div class="col-md-3"><%= item.price %></div>
-                        <div class="col-md-3"><%= item.quantity %></div>
+                    <div class="row text-center py-2 border-bottom cart-item">
+                        <div class="col-12 col-sm-6 cart-item-name d-flex justify-content-center align-items-center mb-2 mb-sm-0">
+                            <%=item.name%>
+                        </div>
+                        <div class="col-6 col-sm-3 d-flex justify-content-center align-items-center mb-2 mb-sm-0">
+                            ₹<%=item.price%>
+                        </div>
+                        <div class="col-6 col-sm-3 d-flex justify-content-center align-items-center">
+                            <span class="mx-3 quantity"><%= item.quantity %> pcs.</span>
+                        </div>
                     </div>
                     <% } %>
             </div>
