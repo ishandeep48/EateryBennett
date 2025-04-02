@@ -10,6 +10,7 @@ const qrcode=require('qrcode');
 const methodOverride = require('method-override');
 const { customAlphabet } = require('nanoid');
 const nodemailer = require('nodemailer');
+const { send } = require('process');
 require('dotenv').config({ path: './keys.env' });
 
 const port = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ const transporter = nodemailer.createTransport({
         pass: AppPass // the app-password of the eatery
     }
 });
+//Function to send OTP
 async function sendOTP(email,otp){
     const mailOptions={
         from:OEmail,
@@ -41,7 +43,24 @@ async function sendOTP(email,otp){
         console.error('Error sending OTP:',error);
     }
 }
+//Function to send a random generated password
+async function sendResetPass(email,pass,id){
+    const mailOptions={
+        from:OEmail,
+        to:email,
+        subject:'Reset Password Request for Bennett Eatery',
+        text: `Your temporary password to login into you Bennett Eatery account ID: ${id} is ${pass} . Please dont share it with anyone`
+    }   
+    try{
+        await transporter.sendMail(mailOptions);
+        console.log(`temp pass sent successfully to ${email}`);
+    }catch(error){
+        console.error('Error sending OTP:',error);
+    }
+}
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 10);
+const randomPassword = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()', 15);
+
 
 app.use(methodOverride('_method'));
 app.use(express.urlencoded({extended:true}));
@@ -210,6 +229,12 @@ app.get('/register',(req,res)=>{
     
     res.render('register');
 })
+app.get('/reset-password',(req,res)=>{
+    if(req.isAuthenticated()){
+        return res.redirect('/');
+    }
+    res.render('reset-password');
+})
 // the function that will crate user and redirect to main page
 app.post('/register', async (req,res) =>{
     let {username , password , email }= req.body;
@@ -240,6 +265,43 @@ app.post('/register', async (req,res) =>{
     //send OTP
     sendOTP(email, OTP);
     res.render('verify-otp', { email, OTP, username, password });
+})
+//POST to reset Password when user forgets the password
+app.post('/reset-password', async (req, res) => { 
+    const {email}   = req.body;
+    const existingUser =await User.findOne({email:email});
+    if(existingUser){
+        const newPass = randomPassword(15);
+        const id=existingUser.username;
+        await existingUser.setPassword(newPass);
+        await existingUser.save();
+        sendResetPass(email, newPass,id);
+
+        res.redirect('/login');
+    }
+    else{
+        return res.render('reset-password', { error: 'Email not registered. Please register first.' });
+    }
+})
+//GET to reset the password if user is logged in
+app.get('/password-reset',isLoggedIn, (req, res) => {
+    res.render('password-reset');
+});
+//POST to reset password if user is logged in
+app.post('/password-reset',isLoggedIn,async(req,res)=>{
+    const {newPassword,confirmPassword} = req.body;
+    const user=req.user;
+    if(newPassword===confirmPassword){
+        if(newPassword.length>=8){
+        await user.setPassword(newPassword);
+        await user.save();
+        res.redirect('/profile');
+        }else{
+            return res.render('password-reset', { error: 'Password must be at least 8 characters long' });
+        }
+    }else{
+        return res.render('password-reset', { error: 'Passwords do not match. Please try again.' });
+    }
 })
 //POST request to verify the OTP that the user enters
 app.post('/verify-otp', async (req, res) => {
