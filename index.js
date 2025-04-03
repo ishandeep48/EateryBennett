@@ -238,7 +238,7 @@ app.get('/reset-password',(req,res)=>{
 // the function that will crate user and redirect to main page
 app.post('/register', async (req,res) =>{
     let {username , password , email }= req.body;
-    
+    email=email.toLowerCase();
     // Check password length
     if (password.length < 8) {
         return res.render('register', { error: 'Password must be at least 8 characters long' });
@@ -265,7 +265,7 @@ app.post('/register', async (req,res) =>{
     //send OTP
     sendOTP(email, OTP);
     req.session.OTP = OTP; // Store OTP in session
-    req.session.email = email; // Store email in session
+    req.session.email = email.toLowerCase(); // Store email in session
     req.session.username = username; // Store username in session
     req.session.password = password; // Store password in session
     req.session.save(err=>{
@@ -279,13 +279,14 @@ app.post('/register', async (req,res) =>{
 //POST to reset Password when user forgets the password
 app.post('/reset-password', async (req, res) => { 
     const {email}   = req.body;
-    const existingUser =await User.findOne({email:email});
+    const checkEmail = email.toLowerCase();
+    const existingUser =await User.findOne({email:checkEmail});
     if(existingUser){
         const newPass = randomPassword(15);
         const id=existingUser.username;
         await existingUser.setPassword(newPass);
         await existingUser.save();
-        sendResetPass(email, newPass,id);
+        sendResetPass(checkEmail, newPass,id);
 
         res.redirect('/login');
     }
@@ -315,7 +316,8 @@ app.post('/password-reset',isLoggedIn,async(req,res)=>{
 })
 //POST request to verify the OTP that the user enters
 app.post('/verify-otp', async (req, res) => {
-    const{OTP,username,email,password}=req.session;
+    let {OTP,username,email,password}=req.session;
+    email=email.toLowerCase();
     const userOTP = req.body.userOTP;
     const correctOTP = OTP;
     console.log(`real otp is ${correctOTP} and users one is ${userOTP} and otp was sent to ${email}`);
