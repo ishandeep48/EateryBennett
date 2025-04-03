@@ -38,7 +38,7 @@ async function sendOTP(email,otp){
     }   
     try{
         await transporter.sendMail(mailOptions);
-        console.log(`OTP sent successfully to ${email}`);
+        console.log(`OTP ${otp} sent successfully to ${email}`);
     }catch(error){
         console.error('Error sending OTP:',error);
     }
@@ -264,7 +264,17 @@ app.post('/register', async (req,res) =>{
     const OTP=Math.floor(100000 + Math.random() * 900000).toString();
     //send OTP
     sendOTP(email, OTP);
-    res.render('verify-otp', { email, OTP, username, password });
+    req.session.OTP = OTP; // Store OTP in session
+    req.session.email = email; // Store email in session
+    req.session.username = username; // Store username in session
+    req.session.password = password; // Store password in session
+    req.session.save(err=>{
+        if(err){
+            console.log(err);
+        }
+        console.log('Session saved');
+    });
+    res.render('verify-otp');
 })
 //POST to reset Password when user forgets the password
 app.post('/reset-password', async (req, res) => { 
@@ -305,8 +315,10 @@ app.post('/password-reset',isLoggedIn,async(req,res)=>{
 })
 //POST request to verify the OTP that the user enters
 app.post('/verify-otp', async (req, res) => {
-    const { userOTP, correctOTP, email, username, password } = req.body;
-    
+    const{OTP,username,email,password}=req.session;
+    const userOTP = req.body.userOTP;
+    const correctOTP = OTP;
+    console.log(`real otp is ${correctOTP} and users one is ${userOTP} and otp was sent to ${email}`);
     if (userOTP === correctOTP) {
         try {
             const usr = new User({
@@ -315,6 +327,11 @@ app.post('/verify-otp', async (req, res) => {
             });
             
             const newUser = await User.register(usr, password);
+            req.session.OTP = null; // Clear OTP from session
+            req.session.email = null; // Clear email from session
+            req.session.username = null; // Clear username from session
+            req.session.password = null; // Clear password from session
+            req.session.save();
             await req.login(newUser, (err) => {
                 if (err) return next(err);
                 res.redirect('/');
@@ -324,12 +341,8 @@ app.post('/verify-otp', async (req, res) => {
             res.redirect('/register');
         }
     } else {
-        res.render('verify-otp', { 
-            email, 
-            OTP: correctOTP,
-            username,
-            password,
-            error: 'OTP is incorrect. Please try again.' 
+        res.render('verify-otp',{
+             error: 'OTP is incorrect. Please try again.' 
         });
     }
 });

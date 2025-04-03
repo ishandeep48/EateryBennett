@@ -31,7 +31,7 @@
     <div class="container">
         <div class="otp-container">
             <h2 class="text-center mb-4">Verify OTP</h2>
-            <p class="text-center mb-4">Please enter the OTP sent to your email: <%= email %></p>
+            <p class="text-center mb-4">Please enter the OTP sent to your email</p>
             
             <% if (typeof error !== 'undefined' && error) { %>
                 <div class="alert alert-danger text-center mb-4" role="alert">
@@ -40,11 +40,7 @@
             <% } %>
             
             <form action="/verify-otp" method="POST">
-                <input type="hidden" name="email" value="<%= email %>">
-                <input type="hidden" name="correctOTP" value="<%= OTP %>">
-                <input type="hidden" name="username" value="<%= username %>">
-                <input type="hidden" name="password" value="<%= password %>">
-                
+                                
                 <div class="mb-3">
                     <input type="text" 
                            class="form-control otp-input" 
