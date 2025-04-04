@@ -75,6 +75,15 @@ async function sendResetPass(email, pass, id) {
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 10);
 const randomPassword = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()', 15);
 
+function eateryName(code){
+    if (code === 'chaiok') { return 'Chai Ok'; } 
+    else if (code === 'kathi') { return 'Kathi'; } 
+    else if (code === 'hotspot') { return 'Hotspot'; } 
+    else if (code === 'quench') { return 'Quench'; } 
+    else if (code === 'snapeats') { return 'Snap Eats'; } 
+    else if (code === 'southern') { return 'Southern Stories'; } 
+    else { return 'Unknown Eatery'; } 
+}
 
 app.use(methodOverride('_method'));
 app.use(express.urlencoded({extended:true}));
@@ -313,92 +322,230 @@ app.get('/password-reset',isLoggedIn, (req, res) => {
     res.render('password-reset');
 });
 //POST to generate pdf
-app.post('/generate-pdf',isLoggedIn,isUser,async(req,res)=>{
-    try{
-    const{username}=req.body;
-    const Orders=await Order.find({user:username});
-    let Total=0;
-    const doc = new pdf();
-    res.writeHead(200, {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'inline; filename="orders.pdf"'
-    });
-    doc.pipe(res);
-    // Add content to the PDF
-    doc.fontSize(20).text(`${username}'s Orders`, { align: 'center' });
-    doc.moveDown();
-    doc.moveDown();
-    Orders.forEach(order => {
-        let orderTotal=0;
-        doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
-        doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
-        doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
-        doc.moveDown();
-        order.items.forEach(item => {   
-            doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
-            orderTotal+= item.price*item.quantity;
-            doc.moveDown();
-        });
-        doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
-        doc.moveDown();
-        doc.moveDown();
-        Total+=orderTotal;
-        doc.moveDown();
-        doc.moveDown();
-    })
-    doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
-    doc.moveDown();
-
-    doc.end();
-    }catch(e){
-        console.log(e);
-        res.status(500).send('Error generating PDF');
-    }
-})
-//POST to generate PDF for Employee side
-app.post('/generate-pdf-emp',isLoggedIn,isEmployee,async(req,res)=>{
-    try{
-        const{eatery}=req.body;
-        const Orders=await Order.find({eatery});
-        let Total=0;
+app.post('/generate-pdf', isLoggedIn, isUser, async (req, res) => {
+    try {
+        const { username } = req.body;
+        const Orders = await Order.find({ user: username });
+        let Total = 0;
         const doc = new pdf();
+
         res.writeHead(200, {
             'Content-Type': 'application/pdf',
             'Content-Disposition': 'inline; filename="orders.pdf"'
         });
+
         doc.pipe(res);
-        // Add content to the PDF
-        doc.fontSize(20).text(`${eatery}'s Orders`, { align: 'center' });
-        doc.moveDown();
-        doc.moveDown();
-        Orders.forEach(order => {
-            let orderTotal=0;
-            doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
-            doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
-            doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
-            doc.fontSize(12).text(`User: ${order.user}`);
-            doc.moveDown();
-            order.items.forEach(item => {   
-                doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
-                orderTotal+= item.price*item.quantity;
-                doc.moveDown();
+
+        Orders.forEach((order, index) => {
+            let orderTotal = 0;
+
+            // === NEW PAGE FOR EACH ORDER ===
+            if (index !== 0) doc.addPage();
+            doc.image('Resources/images/Logo.jpg', 50, 20, { width: 100 });
+            doc.moveDown(0.5);
+            // === ORDER HEADER ===
+            doc.fontSize(25).font('Helvetica-Bold').text('Bennett Eatery', { align: 'center' });
+            doc.moveDown(0.5);
+            doc.fontSize(12).font('Helvetica')
+               .text("Bennett University\nPlot No. 8-11,TechZone-2 \nGreater Noida,U.P.\nTEL : +91-1234567890", { align: 'center' });
+            doc.moveDown(0.5)
+            doc.fontSize(12).font('Helvetica').text(`Generated on: ${new Date().toLocaleDateString()} `, { align: 'center' });
+            doc.moveDown(1);
+            doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(1);
+
+            let name=eateryName(order.eatery);
+            doc.fontSize(16).font('Helvetica-Bold').text(`Order ID: #${order.orderId}`);
+            doc.fontSize(12).font('Helvetica').text(`Eatery: ${name}`);
+            doc.fontSize(12).font('Helvetica').text(`Date: ${order.date.toLocaleDateString()}  ${order.date.toLocaleTimeString()}`);
+            doc.fontSize(12).font('Helvetica').text(`Ordered By: ${order.user}`);
+            doc.moveDown(0.5);
+
+            let currentY = doc.y; // Store current vertical position
+
+            doc.font('Helvetica-Bold')
+                .text('Item', 70, currentY)
+                .text('Quantity', 250, currentY)
+                .text('Price', 350, currentY)
+                .text('Total', 450, currentY);
+
+            doc.moveDown(0.2);
+            doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(0.5);
+
+            // === ORDER ITEMS ===
+            order.items.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                orderTotal += itemTotal;
+                currentY = doc.y; // Update current vertical position
+                doc.font('Helvetica')
+                    .text(`${item.name}`, 70,currentY)
+                    .text(`${item.quantity}`, 250,currentY)
+                    .text(`Rs. ${item.price}`, 350,currentY)
+                    .text(`Rs. ${itemTotal}`, 450,currentY);
+
+                doc.moveDown(0.3);
             });
-            doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
-            doc.moveDown();
-            doc.moveDown();
-            Total+=orderTotal;
-            doc.moveDown();
-            doc.moveDown();
-        })
-        doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
-        doc.moveDown();
-    
+
+            // === ORDER TOTAL ===
+            doc.moveDown(0.5);
+            doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(0.5);
+            doc.font('Helvetica-Bold').fontSize(14).text(`Total for this order: Rs. ${orderTotal}`, { align: 'right' });
+            Total += orderTotal;
+            doc.moveDown(1);
+        });
+
+        // === GRAND TOTAL (On a new page for clarity) ===
+        doc.addPage();
+        doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(1);
+        doc.fontSize(20).font('Helvetica-Bold').text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
+        doc.moveDown(1);
+
+        // === FOOTER ===
+        doc.lineWidth(0.5).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica-Oblique').text('Thank you for ordering! Visit again for more delicious food!', { align: 'center' });
+
         doc.end();
-        }catch(e){
-            console.log(e);
-            res.status(500).send('Error generating PDF');
-        }
-})
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('Error generating PDF');
+    }
+});
+//POST to generate PDF for Employee side
+app.post('/generate-pdf-emp', isLoggedIn, isEmployee, async (req, res) => {
+    try {
+        const { eatery } = req.body;
+        const Orders = await Order.find({ eatery });
+        let Total = 0;
+        const doc = new pdf({ margin: 50 });
+
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename="orders.pdf"'
+        });
+
+        doc.pipe(res);
+        const name=eateryName(eatery);
+        // Header
+        doc.image('Resources/images/Logo.jpg', 50, 20, { width: 100 });
+        doc.moveDown(0.5);
+        doc.fontSize(25).font('Helvetica-Bold').text(`${name} - Order Report`, { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica').text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
+        doc.moveDown(1);
+
+        Orders.forEach((order, index) => {
+            let orderTotal = 0;
+
+            // Add Page Break for each order except the first one
+            if (index > 0) doc.addPage();
+
+            // Order Details
+            doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
+            doc.fontSize(12).font('Helvetica')
+                .text(`Date: ${order.date.toLocaleDateString()} ${order.date.toLocaleTimeString()}`)
+                .text(`User: ${order.user}`)
+                .moveDown(0.5);
+
+            // Order Items Header (Formatted like a Table)
+            doc.font('Helvetica-Bold').fontSize(12).text('Qty', 70)
+                .text('Item', 150)
+                .text('Price', 350)
+                .text('Total', 450);
+            doc.moveDown(0.2);
+
+            // Line Separator
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(1);
+
+            // Order Items
+            order.items.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                orderTotal += itemTotal;
+                let cury=doc.y;
+                doc.font('Helvetica').fontSize(12)
+                    .text(item.quantity.toString(), 70, cury)
+                    .text(item.name, 150, cury)
+                    .text(`Rs. ${item.price.toFixed(2)}`, 350, cury)
+                    .text(`Rs. ${itemTotal.toFixed(2)}`, 450, cury);
+
+                doc.moveDown(0.25);
+            });
+            doc.moveDown(1);
+            // Subtotal for the current order
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(0.5);
+            doc.font('Helvetica-Bold').fontSize(14)
+                .text(`Order Total: Rs. ${orderTotal.toFixed(2)}`, { align: 'right' });
+
+            Total += orderTotal;
+            doc.moveDown(1);
+        });
+
+        // Grand Total
+        doc.moveDown(2);
+        doc.font('Helvetica-Bold').fontSize(18).text(
+            `Total Amount for all orders: Rs. ${Total.toFixed(2)}`,
+            0, doc.y,
+            { align: 'center', width: 550 }
+        );
+
+        // Footer
+        doc.moveDown(2);
+
+        doc.end();
+    } catch (e) {
+        console.log(e);
+        res.status(500).send('Error generating PDF');
+    }
+});
+
+// app.post('/generate-pdf-emp',isLoggedIn,isEmployee,async(req,res)=>{
+//     try{
+//         const{eatery}=req.body;
+//         const Orders=await Order.find({eatery});
+//         let Total=0;
+//         const doc = new pdf();
+//         res.writeHead(200, {
+//             'Content-Type': 'application/pdf',
+//             'Content-Disposition': 'inline; filename="orders.pdf"'
+//         });
+//         doc.pipe(res);
+//         // Add content to the PDF
+//         doc.fontSize(20).text(`${eatery}'s Orders`, { align: 'center' });
+//         doc.moveDown();
+//         doc.moveDown();
+//         Orders.forEach(order => {
+//             let orderTotal=0;
+//             doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
+//             doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
+//             doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
+//             doc.fontSize(12).text(`User: ${order.user}`);
+//             doc.moveDown();
+//             order.items.forEach(item => {   
+//                 doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
+//                 orderTotal+= item.price*item.quantity;
+//                 doc.moveDown();
+//             });
+//             doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
+//             doc.moveDown();
+//             doc.moveDown();
+//             Total+=orderTotal;
+//             doc.moveDown();
+//             doc.moveDown();
+//         })
+//         doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
+//         doc.moveDown();
+    
+//         doc.end();
+//         }catch(e){
+//             console.log(e);
+//             res.status(500).send('Error generating PDF');
+//         }
+// })
 //POST to reset password if user is logged in
 app.post('/password-reset',isLoggedIn,async(req,res)=>{
     const {newPassword,confirmPassword} = req.body;
@@ -694,49 +841,116 @@ app.get('/profile',isLoggedIn,async(req,res)=>{
     }
 })
 //POST to generate pdf for specific order
-app.post('/generate-pdf-order',isLoggedIn,isUser,async(req,res)=>{
-    try{
-        const{oId}=req.body;
-        const Orders=await Order.find({orderId:oId});
-        let Total=0;
+app.post('/generate-pdf-order', isLoggedIn, isUser, async (req, res) => {
+    try {
+        const { oId } = req.body;
+        const Orders = await Order.find({ orderId: oId });
+        let Total = 0;
         const doc = new pdf();
+        console.log(`Name is : ${Orders[0].eatery}`);
+        const eatery_name = eateryName(Orders[0].eatery);
         res.writeHead(200, {
             'Content-Type': 'application/pdf',
             'Content-Disposition': 'inline; filename="orders.pdf"'
         });
         doc.pipe(res);
-        // Add content to the PDF
-        doc.fontSize(20).text(`Order Number #${oId}`, { align: 'center' });
-        doc.moveDown();
-        doc.moveDown();
+
+        // Header
+        // console.log(Orders);
+        doc.image('Resources/images/Logo.jpg', 50, 20, { width: 100 });
+        doc.moveDown(0.5);
+        doc.fontSize(25).font('Helvetica-Bold').text("Bennett Eatery", { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica')
+            .text("Bennett University\nPlot No. 8-11,TechZone-2 \nGreater Noida,U.P.\nTEL : +91-1234567890", { align: 'center' });
+        doc.moveDown(0.5);
+        doc.fontSize(12).font('Helvetica').text(`Generated on: ${new Date().toLocaleDateString()}`, { align: 'center' });
+        doc.moveDown(0.5);
+        doc.moveDown(1);
+
         Orders.forEach(order => {
-            let orderTotal=0;
-            doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
-            doc.font('Helvetica').fontSize(12).text(`User: ${order.user}`);
-            doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
-            doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
+            let orderTotal = 0;
+
+            // Order Details
+            doc.font('Helvetica-Bold').fontSize(15).text(`Outlet: ${eatery_name}`);
+            doc.fontSize(12).font('Helvetica')
+                .text(`Order ID : #${order.orderId}`)
+                .text(`Date : ${order.date.toLocaleDateString()}    ${order.date.toLocaleTimeString()}`)
+                .text(`Ordered By: ${order.user}`)
+                .moveDown();
+
+            // Line separator
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
             doc.moveDown();
-            order.items.forEach(item => {   
-                doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
-                orderTotal+= item.price*item.quantity;
-                doc.moveDown();
+
+            // Order Items
+            const headerY = doc.y; // Store the current Y position for the header row
+
+            doc.font('Helvetica-Bold')
+                .text('Qty', 70, headerY)
+                .text('Item', 120, headerY)
+                .text('Price', 350, headerY)
+                .text('Total', 450, headerY);
+
+            doc.moveDown(0.5); // Move to the next line for the items
+
+            // doc.font('Helvetica-Bold').text('Qty        Item                             Price                              Total', { align: 'left' });
+            doc.moveDown(0.5);
+
+            order.items.forEach(item => {
+                let itemTotal = item.price * item.quantity;
+                orderTotal += itemTotal;
+
+                const currentY = doc.y; // Store the current Y position for the row
+
+                doc.font('Helvetica').text(`${item.quantity}`, 70, currentY);  // Qty Column
+                doc.text(`${item.name}`, 120, currentY);                      // Item Name Column
+                doc.text(`Rs. ${item.price.toFixed(2)}`, 350, currentY);      // Price Column
+                doc.text(`Rs. ${itemTotal.toFixed(2)}`, 450, currentY);  
+                // // Displaying Items
+                // doc.font('Helvetica').text(
+                //     `${item.quantity}       ${item.name.padEnd(30)}     Rs. ${item.price.toFixed(2)}               Rs. ${itemTotal.toFixed(2)}`,
+                // );
             });
-            doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
+
             doc.moveDown();
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
             doc.moveDown();
-            Total+=orderTotal;
-            doc.moveDown();
-            doc.moveDown();
-        })
-        // doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
+
+            // Subtotals and Taxes
+            const totalAmount = orderTotal;
+
+            doc.font('Helvetica-Bold')
+                
+                .text(`Total Amount: Rs. ${totalAmount.toFixed(2)}`, { align: 'right' });
+
+            doc.moveDown(1.5);
+            Total += totalAmount;
+        });
+
+        // Overall Total (if multiple orders)
+        doc.font('Helvetica-Bold').fontSize(18).text(
+            `Grand Total: Rs. ${Total.toFixed(2)}`,
+            0, doc.y, // Start from the left edge (0) and current Y position
+            { align: 'center' } // Width should be the entire printable area (550 px for A4 width)
+        );
         doc.moveDown();
-    
+        
+        // Footer
+        doc.fontSize(10).font('Helvetica').text(
+            `Where every meal is a celebration of flavor and happiness! `,
+            { align: 'center' }
+        );
+        
+        
+
         doc.end();
-    }catch(e){
+    } catch (e) {
         console.log(e);
         res.status(500).send('Error generating PDF');
     }
-})
+});
+
 // page for food items of each eatery
 app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     let eatery=req.params.eatery.toLowerCase();
