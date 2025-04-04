@@ -819,6 +819,9 @@ app.get('/order/:oid',isLoggedIn,isUser,async(req,res)=>{
     const oid=req.params.oid;
     const user=req.user;
     const orderDetails=await Order.findOne({orderId:oid});
+    if(!orderDetails){
+        return res.render('e404');
+    }
     res.render('orderpage',orderDetails);
 })
 
