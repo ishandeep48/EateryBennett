@@ -14,7 +14,12 @@
         <!-- <div class="text-end mb-4">
             <%= new Date(date).toLocaleDateString() %> <%= new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
         </div> -->
-        <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Order #<%= orderId %> <br>
+        <h2 class="text-center mb-4" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.1); display: block;">Order #<%= orderId %> 
+            <button type="button" class="btn btn-outline-secondary" id="getPDF" style="display: inline;">PDF</button>
+            <div class="spinner-border text-secondary" role="status" id="loadingSpinner" style="display: none;">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            <br>
            <small class="text-muted" style="font-size: 1.3rem;"> From <%= eatt %> on <%= new Date(date).toLocaleDateString() %> <%= new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %>
         </small></h2>
     
@@ -61,6 +66,31 @@
         </div>
     </section>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    const PDFbtn=document.getElementById('getPDF');
+    const orderId="<%=orderId%>";
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    PDFbtn.addEventListener('click',async()=>{
+    // PDFbtn.style.display='none';
+    loadingSpinner.style.display='inline-block';
+    PDFbtn.disabled = true;
+        try{
+        const response = await axios.post('/generate-pdf-order',{oId:orderId },{
+            responseType: 'blob' // Important for handling binary data
+        });
+        const url = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+        window.open(url, '_blank');
+
+    }catch (error) {
+        console.error('Error generating PDF:', error);
+    }finally {
+    PDFbtn.disabled = false;
+    // PDFbtn.style.display='inline';
+    loadingSpinner.style.display='none';
+    }});
+</script>
 <script src="/scripts/script.js"></script>
 </body>
 </html>

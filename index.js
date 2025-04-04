@@ -693,7 +693,50 @@ app.get('/profile',isLoggedIn,async(req,res)=>{
         res.render('eaprofile',{data});
     }
 })
-
+//POST to generate pdf for specific order
+app.post('/generate-pdf-order',isLoggedIn,isUser,async(req,res)=>{
+    try{
+        const{oId}=req.body;
+        const Orders=await Order.find({orderId:oId});
+        let Total=0;
+        const doc = new pdf();
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename="orders.pdf"'
+        });
+        doc.pipe(res);
+        // Add content to the PDF
+        doc.fontSize(20).text(`Order Number #${oId}`, { align: 'center' });
+        doc.moveDown();
+        doc.moveDown();
+        Orders.forEach(order => {
+            let orderTotal=0;
+            doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
+            doc.font('Helvetica').fontSize(12).text(`User: ${order.user}`);
+            doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
+            doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
+            doc.moveDown();
+            order.items.forEach(item => {   
+                doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
+                orderTotal+= item.price*item.quantity;
+                doc.moveDown();
+            });
+            doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
+            doc.moveDown();
+            doc.moveDown();
+            Total+=orderTotal;
+            doc.moveDown();
+            doc.moveDown();
+        })
+        // doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+        doc.moveDown();
+    
+        doc.end();
+    }catch(e){
+        console.log(e);
+        res.status(500).send('Error generating PDF');
+    }
+})
 // page for food items of each eatery
 app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     let eatery=req.params.eatery.toLowerCase();
