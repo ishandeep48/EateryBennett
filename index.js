@@ -11,6 +11,7 @@ const methodOverride = require('method-override');
 const { customAlphabet } = require('nanoid');
 const nodemailer = require('nodemailer');
 const { send } = require('process');
+const pdf = require('pdfkit');
 require('dotenv').config({ path: './keys.env' });
 
 const port = process.env.PORT || 3000;
@@ -33,8 +34,11 @@ async function sendOTP(email,otp){
     const mailOptions={
         from:OEmail,
         to:email,
-        subject:'One Time Password for Registration on Bennett Eatery',
-        text:`Your One Time Password for registration on Bennett Eatery is ${otp} . Please do not share this with anyone. `
+        subject:'Bennett Eatery Verification Code',
+        text:`Your Bennett Eatery verification code is ${otp} . `,
+        html: `<p>Your Bennett Eatery verification code is <strong>${otp}</strong>.</p><p>If you did not request this code, you can safely ignore this email.</p>`,
+        replyTo: 'bennetteatery@gmail.com'
+
     }   
     try{
         await transporter.sendMail(mailOptions);
@@ -44,20 +48,30 @@ async function sendOTP(email,otp){
     }
 }
 //Function to send a random generated password
-async function sendResetPass(email,pass,id){
-    const mailOptions={
-        from:OEmail,
-        to:email,
-        subject:'Reset Password Request for Bennett Eatery',
-        text: `Your temporary password to login into you Bennett Eatery account ID: ${id} is ${pass} . Please dont share it with anyone`
-    }   
-    try{
+async function sendResetPass(email, pass, id) {
+    const mailOptions = {
+        from: OEmail,
+        to: email,
+        subject: 'Bennett Eatery Password Reset Request',
+        text: `Your temporary password for your Bennett Eatery account (ID: ${id}) is: ${pass}.`,
+        html: `
+            <p>Hello,</p>
+            <p>Your temporary password for your Bennett Eatery account (ID: <strong>${id}</strong>) is:</p>
+            <p style="font-size: 1.2em; font-weight: bold;">${pass}</p>
+            <p>Please use this password to log in and change it immediately for your security.</p>
+            <p>If you did not request a password reset, you can safely ignore this email.</p>
+            <p>Best regards,<br>Bennett Eatery Support</p>
+        `,
+        replyTo: 'bennetteatery@gmail.com'
+    };   
+    try {
         await transporter.sendMail(mailOptions);
-        console.log(`temp pass sent successfully to ${email}`);
-    }catch(error){
-        console.error('Error sending OTP:',error);
+        console.log(`Temporary password sent successfully to ${email}`);
+    } catch (error) {
+        console.error('Error sending temporary password:', error);
     }
 }
+
 const nanoid = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 10);
 const randomPassword = customAlphabet('1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()', 15);
 
@@ -298,6 +312,93 @@ app.post('/reset-password', async (req, res) => {
 app.get('/password-reset',isLoggedIn, (req, res) => {
     res.render('password-reset');
 });
+//POST to generate pdf
+app.post('/generate-pdf',isLoggedIn,isUser,async(req,res)=>{
+    try{
+    const{username}=req.body;
+    const Orders=await Order.find({user:username});
+    let Total=0;
+    const doc = new pdf();
+    res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="orders.pdf"'
+    });
+    doc.pipe(res);
+    // Add content to the PDF
+    doc.fontSize(20).text(`${username}'s Orders`, { align: 'center' });
+    doc.moveDown();
+    doc.moveDown();
+    Orders.forEach(order => {
+        let orderTotal=0;
+        doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
+        doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
+        doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
+        doc.moveDown();
+        order.items.forEach(item => {   
+            doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
+            orderTotal+= item.price*item.quantity;
+            doc.moveDown();
+        });
+        doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
+        doc.moveDown();
+        doc.moveDown();
+        Total+=orderTotal;
+        doc.moveDown();
+        doc.moveDown();
+    })
+    doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+    doc.moveDown();
+
+    doc.end();
+    }catch(e){
+        console.log(e);
+        res.status(500).send('Error generating PDF');
+    }
+})
+//POST to generate PDF for Employee side
+app.post('/generate-pdf-emp',isLoggedIn,isEmployee,async(req,res)=>{
+    try{
+        const{eatery}=req.body;
+        const Orders=await Order.find({eatery});
+        let Total=0;
+        const doc = new pdf();
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'inline; filename="orders.pdf"'
+        });
+        doc.pipe(res);
+        // Add content to the PDF
+        doc.fontSize(20).text(`${eatery}'s Orders`, { align: 'center' });
+        doc.moveDown();
+        doc.moveDown();
+        Orders.forEach(order => {
+            let orderTotal=0;
+            doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
+            doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
+            doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
+            doc.fontSize(12).text(`User: ${order.user}`);
+            doc.moveDown();
+            order.items.forEach(item => {   
+                doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
+                orderTotal+= item.price*item.quantity;
+                doc.moveDown();
+            });
+            doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
+            doc.moveDown();
+            doc.moveDown();
+            Total+=orderTotal;
+            doc.moveDown();
+            doc.moveDown();
+        })
+        doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+        doc.moveDown();
+    
+        doc.end();
+        }catch(e){
+            console.log(e);
+            res.status(500).send('Error generating PDF');
+        }
+})
 //POST to reset password if user is logged in
 app.post('/password-reset',isLoggedIn,async(req,res)=>{
     const {newPassword,confirmPassword} = req.body;
