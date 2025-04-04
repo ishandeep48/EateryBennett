@@ -346,7 +346,7 @@ app.post('/generate-pdf',isLoggedIn,isUser,async(req,res)=>{
         doc.moveDown();
         doc.moveDown();
     })
-    doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+    doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
     doc.moveDown();
 
     doc.end();
@@ -390,7 +390,7 @@ app.post('/generate-pdf-emp',isLoggedIn,isEmployee,async(req,res)=>{
             doc.moveDown();
             doc.moveDown();
         })
-        doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+        doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
         doc.moveDown();
     
         doc.end();
@@ -728,7 +728,7 @@ app.post('/generate-pdf-order',isLoggedIn,isUser,async(req,res)=>{
             doc.moveDown();
             doc.moveDown();
         })
-        // doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: ₹ ${Total}`, { align: 'center' });
+        // doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
         doc.moveDown();
     
         doc.end();
