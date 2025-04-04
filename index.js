@@ -503,49 +503,6 @@ app.post('/generate-pdf-emp', isLoggedIn, isEmployee, async (req, res) => {
     }
 });
 
-// app.post('/generate-pdf-emp',isLoggedIn,isEmployee,async(req,res)=>{
-//     try{
-//         const{eatery}=req.body;
-//         const Orders=await Order.find({eatery});
-//         let Total=0;
-//         const doc = new pdf();
-//         res.writeHead(200, {
-//             'Content-Type': 'application/pdf',
-//             'Content-Disposition': 'inline; filename="orders.pdf"'
-//         });
-//         doc.pipe(res);
-//         // Add content to the PDF
-//         doc.fontSize(20).text(`${eatery}'s Orders`, { align: 'center' });
-//         doc.moveDown();
-//         doc.moveDown();
-//         Orders.forEach(order => {
-//             let orderTotal=0;
-//             doc.font('Helvetica-Bold').fontSize(15).text(`Order ID: ${order.orderId}`);
-//             doc.font('Helvetica').fontSize(12).text(`Date: ${order.date.toLocaleDateString()}`);
-//             doc.font('Helvetica').fontSize(12).text(`Eatery: ${order.eatery}`);
-//             doc.fontSize(12).text(`User: ${order.user}`);
-//             doc.moveDown();
-//             order.items.forEach(item => {   
-//                 doc.text(`Item: ${item.name}, Quantity: ${item.quantity}, Price: Rs. ${item.price}, From: ${order.eatery}`);
-//                 orderTotal+= item.price*item.quantity;
-//                 doc.moveDown();
-//             });
-//             doc.font('Helvetica-Bold').fontSize(15).text(`Total Amount for this order: Rs. ${orderTotal}`);
-//             doc.moveDown();
-//             doc.moveDown();
-//             Total+=orderTotal;
-//             doc.moveDown();
-//             doc.moveDown();
-//         })
-//         doc.font('Helvetica-Bold').fontSize(20).text(`Total Amount for all orders: Rs. ${Total}`, { align: 'center' });
-//         doc.moveDown();
-    
-//         doc.end();
-//         }catch(e){
-//             console.log(e);
-//             res.status(500).send('Error generating PDF');
-//         }
-// })
 //POST to reset password if user is logged in
 app.post('/password-reset',isLoggedIn,async(req,res)=>{
     const {newPassword,confirmPassword} = req.body;
