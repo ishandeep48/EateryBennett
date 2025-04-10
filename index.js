@@ -12,7 +12,22 @@ const { customAlphabet } = require('nanoid');
 const nodemailer = require('nodemailer');
 const { send } = require('process');
 const pdf = require('pdfkit');
+const { type } = require('os');
 require('dotenv').config({ path: './keys.env' });
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const multer = require('multer');
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder:'profilePictures',
+        allowed_formats: ['jpg', 'png', 'jpeg'],
+        transformation: [{ width: 300, height: 300, crop: 'limit' }]
+    }
+});
+const upload = multer({storage});
+
 
 const port = process.env.PORT || 3000;
 const mongoURI = process.env.MONGO_URI;
@@ -21,6 +36,16 @@ const upiID = process.env.UPI_ID;
 const OEmail=process.env.EMAIL;
 const AppPass=process.env.APP_PASS;
 const upiName=process.env.UPI_Name;
+const cloudName=process.env.CLOUD_NAME;
+const cloudKey=process.env.CLOUD_KEY;
+const cloudSecret=process.env.CLOUD_SECRET;
+
+
+cloudinary.config({
+    cloud_name: cloudName,
+    api_key: cloudKey,
+    api_secret: cloudSecret
+  });
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -100,6 +125,8 @@ app.use(express.static(path.join(__dirname, 'Resources')));
 app.set('view engine','ejs');
 
 
+
+
 // mongoose.connect('mongodb://127.0.0.1:27017/Eatery')
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
@@ -139,6 +166,10 @@ const userSchema = new mongoose.Schema({
     EmpOf:{
         type: String,
         default:'none'
+    },
+    profilePic:{
+        type : String,
+        default : '/images/user.png'
     }
 });
 const eaterySchema = new mongoose.Schema({
@@ -664,8 +695,29 @@ app.get('/logout',isLoggedIn,(req,res,next)=>{
 })
 //the homepage for users
 app.get('/',isLoggedIn,isUser,(req,res)=>{
-    res.render('home')
+    const data=req.user;
+    res.render('home',{data});
 })
+//REMOVE PROFILE PICTURE
+app.post('/remove-profile-pic', isLoggedIn, async (req, res) => {
+    const user = req.user;
+    const currentProfilePic = user.profilePic;
+
+    // Check if the current profile picture is not the default one
+    if (currentProfilePic && !currentProfilePic.includes('/images/user.png')) {
+        try {
+            // Extract the public ID from the Cloudinary URL
+            const publicId = currentProfilePic.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(`profilePictures/${publicId}`);
+        } catch (error) {
+            console.error('Error deleting profile picture from Cloudinary:', error);
+        }
+    }
+
+    user.profilePic = '/images/user.png'; // Reset to default image
+    await user.save();
+    res.redirect('/profile');
+});
 //PATCH route to update the menu
 app.patch('/update-menu',isLoggedIn,isEmployee,async(req,res)=>{
     const {eatery,items}=req.body;
@@ -784,7 +836,7 @@ app.get('/update-cart',isLoggedIn,isUser,(req,res)=>{
 
 // GET route to retrieve user's cart
 app.get('/cart', isLoggedIn,isUser, async (req, res) => {
-    res.render('cart', { cart: req.user.cart.items,eatery:req.user.cart.eatery || [] }); 
+    res.render('cart', { cart: req.user.cart.items,eatery:req.user.cart.eatery || [],data:req.user }); 
 });
 //profile page ( right now i am thinking to keep this for both employee and students)
 app.get('/profile',isLoggedIn,async(req,res)=>{
@@ -804,7 +856,7 @@ app.post('/generate-pdf-order', isLoggedIn, isUser, async (req, res) => {
         const Orders = await Order.find({ orderId: oId });
         let Total = 0;
         const doc = new pdf();
-        console.log(`Name is : ${Orders[0].eatery}`);
+        // console.log(`Name is : ${Orders[0].eatery}`);
         const eatery_name = eateryName(Orders[0].eatery);
         res.writeHead(200, {
             'Content-Type': 'application/pdf',
@@ -908,6 +960,17 @@ app.post('/generate-pdf-order', isLoggedIn, isUser, async (req, res) => {
     }
 });
 
+app.post('/update-pfp',isLoggedIn,upload.single('profilePic'),async(req,res)=>{
+    try{
+        const imgURL=req.file.path;
+        const user=req.user;
+        await User.findByIdAndUpdate(user._id,{profilePic:imgURL});
+        res.redirect('/profile');
+    }catch(e){
+        console.log(e);
+        res.status(500).send('Error updating profile picture');
+    }
+})
 // page for food items of each eatery
 app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     let eatery=req.params.eatery.toLowerCase();
@@ -928,8 +991,9 @@ app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     }else{
         const eateryData=await Eatery.findOne({Name:eatery});
         const open =eateryData.isOpen;
+        const data = req.user;
         if(open){
-            res.render('eatery',{items,eatery,open,query:filter});
+            res.render('eatery',{items,eatery,open,query:filter,data});
         }else{
             res.render('closed');
         }
@@ -993,7 +1057,8 @@ app.get('/order/:oid',isLoggedIn,isUser,async(req,res)=>{
     if(!orderDetails){
         return res.render('e404');
     }
-    res.render('orderpage',orderDetails);
+    const data = req.user;
+    res.render('orderpage',{...orderDetails.toObject(),data});
 })
 
 // Add this new route for marking order as completed
