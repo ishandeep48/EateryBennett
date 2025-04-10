@@ -987,7 +987,7 @@ app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
     const items = await Food.find(query);
     
     if(items.length==0 && !filter){
-        return res.render('e404');
+        return res.render('e404',{data:req.user || []});
     }else{
         const eateryData=await Eatery.findOne({Name:eatery});
         const open =eateryData.isOpen;
@@ -1055,7 +1055,7 @@ app.get('/order/:oid',isLoggedIn,isUser,async(req,res)=>{
     const user=req.user;
     const orderDetails=await Order.findOne({orderId:oid});
     if(!orderDetails){
-        return res.render('e404');
+        return res.render('e404',{data:req.user || []});
     }
     const data = req.user;
     res.render('orderpage',{...orderDetails.toObject(),data});
@@ -1136,7 +1136,7 @@ app.delete('/admin/delete-user', isLoggedIn, isAdmin, async(req, res) => {
 
 // e404 ofcourse 
 app.get('*',(req,res)=>{
-    res.render('e404');
+    res.render('e404',{data:req.user || []});
 })
 // let the server start my lord
 app.listen(port, '0.0.0.0',()=>{
