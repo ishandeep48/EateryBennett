@@ -962,8 +962,23 @@ app.post('/generate-pdf-order', isLoggedIn, isUser, async (req, res) => {
 
 app.post('/update-pfp',isLoggedIn,upload.single('profilePic'),async(req,res)=>{
     try{
+        const user = req.user;
+    const currentProfilePic = user.profilePic;
+
+    // Check if the current profile picture is not the default one
+    if (currentProfilePic && !currentProfilePic.includes('/images/user.png')) {
+        try {
+            // Extract the public ID from the Cloudinary URL
+            const publicId = currentProfilePic.split('/').pop().split('.')[0];
+            await cloudinary.uploader.destroy(`profilePictures/${publicId}`);
+        } catch (error) {
+            console.error('Error deleting profile picture from Cloudinary:', error);
+        }
+    }
+
+        // ===============================================
         const imgURL=req.file.path;
-        const user=req.user;
+        // const user=req.user;
         await User.findByIdAndUpdate(user._id,{profilePic:imgURL});
         res.redirect('/profile');
     }catch(e){
