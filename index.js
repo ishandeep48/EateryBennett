@@ -1010,7 +1010,7 @@ app.get('/:eatery',isLoggedIn,isUser,async(req,res)=>{
         if(open){
             res.render('eatery',{items,eatery,open,query:filter,data});
         }else{
-            res.render('closed');
+            res.render('closed',{data:req.user || []});
         }
     }
 })
