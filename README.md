@@ -6,7 +6,9 @@ Hey everyone! This is my **4th semester college project**, and it's currently **
 
 ## 🚀 **Project Status**
 - 🔨 **TODO:** Improve UI elements and enhance handling of sensitive and confidential data.  
-- 💡 **Future Plan:** Rebuild the UI using **React** and remove **EJS** for a better, more modern architecture.  
+- 💡 **Future Plan:** Rebuild the UI using **React** and remove **EJS** for a better, more modern architecture.
+
+- **TEST CREDS:** ID- q3 Pass- q3 goto site and login
 
 ---
 
